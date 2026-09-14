@@ -1,4 +1,19 @@
-import { PlayIcon } from './icons'
+import { AnimatePresence, motion } from 'motion/react'
+import {
+  ArrowRight,
+  Check,
+  GitBranch,
+  MessageSquare,
+  Play,
+  Plus,
+  Sparkles,
+  Terminal,
+  Users,
+} from 'lucide-react'
+import { useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { Reveal } from './components/Reveal'
+import { ShimmerButton } from './components/watermelon/shimmer-button'
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -10,51 +25,58 @@ interface LandingPageProps {
 // whitespace handling -- relying on '\n' inside a flex/inline layout caused
 // lines to run together and overflow the card.
 const PREVIEW_LINES: { text: string; tok?: string }[][] = [
-  [{ text: '// two people, one file', tok: 'tok-comment' }],
+  [{ text: '// two people, one file', tok: 'text-muted-foreground' }],
   [
-    { text: 'function ', tok: 'tok-keyword' },
-    { text: 'sync', tok: 'tok-fn' },
+    { text: 'function ', tok: 'text-primary' },
+    { text: 'sync', tok: 'text-accent' },
     { text: '(' },
-    { text: 'team', tok: 'tok-param' },
+    { text: 'team', tok: 'text-primary/70' },
     { text: ') {' },
   ],
   [
-    { text: '  return ', tok: 'tok-keyword' },
+    { text: '  return ', tok: 'text-primary' },
     { text: 'team.' },
-    { text: 'map', tok: 'tok-fn' },
+    { text: 'map', tok: 'text-accent' },
     { text: '(p => p.' },
-    { text: 'cursor', tok: 'tok-param' },
+    { text: 'cursor', tok: 'text-primary/70' },
     { text: ')' },
   ],
   [{ text: '}' }],
 ]
 
-const FEATURES = [
+const FEATURES: {
+  icon: LucideIcon
+  title: string
+  body: string
+  bullets: string[]
+}[] = [
   {
-    icon: '⬤',
+    icon: Users,
     title: 'Live collaboration',
     body: 'See teammates’ cursors, selections, and edits land in real time.',
     bullets: ['Live cursors & presence', 'Inline comment threads', 'Room chat with mentions'],
   },
   {
-    icon: '▶',
+    icon: Play,
     title: 'Run & debug instantly',
     body: 'Execute code in a real sandbox without leaving the editor.',
     bullets: ['Interactive stdin terminal', 'Real step-through debugging', 'Set breakpoints & logpoints'],
   },
   {
-    icon: '⎇',
+    icon: GitBranch,
     title: 'Git built in',
     body: 'Commit, branch, and review against a real repo.',
     bullets: ['Commit & branch history', 'Diff review before merging', 'No separate tool needed'],
   },
   {
-    icon: '✦',
+    icon: Sparkles,
     title: 'AI assistant',
     body: 'Ask questions or get an explanation of any selection.',
     bullets: ['Explain any selection', 'Ask about the whole project', 'Answers stay in the room chat'],
   },
 ]
+
+const LANGUAGES = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'Rust', 'Go']
 
 const TIMELINE_STEPS = [
   { label: 'Sign up', body: 'Create a free account in seconds.' },
@@ -87,186 +109,391 @@ const FAQS = [
   },
 ]
 
-function LandingPage({ onGetStarted, onOpenLegal }: LandingPageProps) {
+/** Shared section heading: a plain phrase with the last word set in the script face. */
+function SectionTitle({ lead, accent }: { lead: string; accent: string }) {
   return (
-    <div className="landing">
-      <section className="landing-hero">
-        <div className="landing-glow" aria-hidden="true" />
-        <div className="landing-copy">
-          <span className="landing-eyebrow">Real-time collaborative coding</span>
-          <h1 className="landing-title">
-            Code together, <span className="landing-title-script">in real time.</span>
-          </h1>
-          <p className="landing-subtitle">
-            One shared editor for your whole team — live cursors, chat, git, sandboxed execution,
-            and an AI assistant, all in the same tab.
-          </p>
-          <div className="landing-cta">
-            <button
-              type="button"
-              className="btn btn-primary landing-cta-btn"
-              onClick={onGetStarted}
-            >
-              Get started — it's free
-            </button>
-            <p className="landing-cta-note">Sign in to create or manage your projects.</p>
-          </div>
+    <h2 className="text-balance text-center text-3xl font-bold tracking-tight sm:text-4xl">
+      {lead}{' '}
+      {/* The script face overhangs its box, so the padding/negative-margin pair
+          gives the glyph room to render without the descender being clipped. */}
+      <span className="bg-gradient-primary bg-clip-text px-[0.16em] font-script text-4xl text-transparent sm:text-5xl -mx-[0.16em]">
+        {accent}
+      </span>
+    </h2>
+  )
+}
+
+function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card/60 backdrop-blur-sm transition-colors hover:border-primary/40">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-medium"
+      >
+        {q}
+        <Plus
+          aria-hidden="true"
+          size={18}
+          className={`shrink-0 text-primary transition-transform duration-300 ${open ? 'rotate-45' : ''}`}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            // Animating height rather than toggling display keeps the panel
+            // from snapping open; overflow-hidden on the wrapper is what makes
+            // the height transition actually clip the text while it expands.
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="px-5 pb-5 text-muted-foreground">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function LandingPage({ onGetStarted, onOpenLegal }: LandingPageProps) {
+  const [openFaq, setOpenFaq] = useState<string | null>(FAQS[0].q)
+
+  return (
+    <div className="w-full">
+      {/* ---------------------------------------------------------------- Hero */}
+      <section className="relative overflow-hidden px-6 pb-20 pt-16 sm:pt-24">
+        {/* Decorative brand wash. Two offset radial tints in the brand pink and
+            teal, plus a faint grid, so the hero reads as lit rather than as a
+            flat panel. Pointer-events-none keeps it from eating clicks. */}
+        {/* The page shell caps content at a max-width, so this layer is
+            narrower than the viewport and would otherwise end in a visible
+            rectangle -- a hard seam down the right side and across the bottom,
+            obvious in light mode. Widening it to 100vw doesn't help because
+            the section's overflow-hidden clips it straight back to the column.
+            So instead of trying to reach the edges, it fades out before them:
+            the radial mask takes the wash to fully transparent on every side,
+            leaving no edge to see. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_50%_55%_at_50%_32%,black_25%,transparent_100%)]"
+        >
+          <div className="absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[120px]" />
+          <div className="absolute right-[-10rem] top-[6rem] h-[28rem] w-[28rem] rounded-full bg-accent/20 blur-[120px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border-hsl)/0.35)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border-hsl)/0.35)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
         </div>
 
-        <div className="landing-preview" aria-hidden="true">
-          <div className="landing-preview-header">
-            <span className="landing-preview-dot" />
-            <span className="landing-preview-dot" />
-            <span className="landing-preview-dot" />
-            <span className="landing-preview-name">main.js</span>
-          </div>
-          <div className="landing-preview-code">
-            {PREVIEW_LINES.map((line, i) => (
-              <div className="landing-preview-line" key={i}>
-                {line.map((token, j) =>
-                  token.tok ? (
-                    <span key={j} className={token.tok}>
-                      {token.text}
-                    </span>
-                  ) : (
-                    <span key={j}>{token.text}</span>
-                  ),
-                )}
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+          <div>
+            <Reveal>
+              <span className="inline-flex items-center gap-2 rounded-pill border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                Real-time collaborative coding
+              </span>
+            </Reveal>
+
+            <Reveal delay={0.06}>
+              <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.1] tracking-tight sm:text-6xl">
+                Code together,{' '}
+                <span className="bg-gradient-primary bg-clip-text px-[0.16em] font-script text-5xl text-transparent sm:text-7xl -mx-[0.16em]">
+                  in real time.
+                </span>
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+                One shared editor for your whole team — live cursors, chat, git, sandboxed
+                execution, and an AI assistant, all in the same tab.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.18}>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <ShimmerButton onClick={onGetStarted} className="shadow-glow text-[hsl(var(--on-brand))]">
+                  <span className="inline-flex items-center gap-2">
+                    Get started — it's free
+                    <ArrowRight aria-hidden="true" size={18} />
+                  </span>
+                </ShimmerButton>
               </div>
+              {/* Asserted verbatim by the end-to-end suite as the signed-out
+                  marker on "/" -- keep the wording byte-for-byte. */}
+              <p className="mt-4 text-sm text-muted-foreground">
+                Sign in to create or manage your projects.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Editor preview */}
+          <Reveal delay={0.24}>
+            <div
+              aria-hidden="true"
+              className="rounded-lg border border-border bg-card/80 shadow-elegant backdrop-blur-md"
+            >
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                <span className="h-3 w-3 rounded-full bg-destructive/70" />
+                <span className="h-3 w-3 rounded-full bg-primary/70" />
+                <span className="h-3 w-3 rounded-full bg-accent/70" />
+                <span className="ml-2 font-mono text-xs text-muted-foreground">main.js</span>
+                <span className="ml-auto flex -space-x-2">
+                  <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-card bg-primary text-[10px] font-semibold text-primary-foreground">
+                    A
+                  </span>
+                  <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-card bg-accent text-[10px] font-semibold text-accent-foreground">
+                    S
+                  </span>
+                </span>
+              </div>
+              <div className="space-y-1 p-5 font-mono text-sm leading-relaxed">
+                {PREVIEW_LINES.map((line, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + i * 0.12, duration: 0.4 }}
+                  >
+                    {line.map((token, j) => (
+                      <span key={j} className={token.tok}>
+                        {token.text}
+                      </span>
+                    ))}
+                  </motion.div>
+                ))}
+                <motion.span
+                  className="inline-block h-4 w-[2px] translate-y-[3px] bg-primary"
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.6 }}
+                />
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        {/* Language strip */}
+        <Reveal delay={0.3}>
+          <div className="mx-auto mt-16 flex max-w-4xl flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            <span className="text-sm text-muted-foreground">Runs for real in</span>
+            {LANGUAGES.map((lang) => (
+              <span
+                key={lang}
+                className="rounded-pill border border-border bg-card/60 px-3 py-1 font-mono text-sm"
+              >
+                {lang}
+              </span>
             ))}
           </div>
-        </div>
+        </Reveal>
       </section>
 
-      <section className="landing-section">
-        <h2 className="landing-section-title">
-          How it <span className="landing-title-script">works</span>
-        </h2>
-        <p className="landing-section-subtitle">From an empty dashboard to shipping code, together.</p>
-        <div className="landing-timeline">
+      {/* --------------------------------------------------------- How it works */}
+      <section className="px-6 py-20">
+        <Reveal>
+          <SectionTitle lead="How it" accent="works" />
+          <p className="mt-4 text-center text-muted-foreground">
+            From an empty dashboard to shipping code, together.
+          </p>
+        </Reveal>
+
+        <div className="mx-auto mt-12 grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {TIMELINE_STEPS.map((step, i) => (
-            <div key={step.label} className="landing-timeline-card">
-              <span className="landing-timeline-index">{i + 1}</span>
-              <h3>{step.label}</h3>
-              <p>{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <h2 className="landing-section-title">
-          Everything you need to <span className="landing-title-script">ship</span>
-        </h2>
-        <p className="landing-section-subtitle">
-          Real collaboration, a real sandbox, and real git — not a toy demo.
-        </p>
-        <div className="landing-features">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="landing-feature-card">
-              <span className="landing-feature-icon">
-                {f.icon === '▶' ? <PlayIcon size={16} /> : f.icon}
-              </span>
-              <h3>{f.title}</h3>
-              <p>{f.body}</p>
-              <ul className="landing-feature-bullets">
-                {f.bullets.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <h2 className="landing-section-title">
-          See it in <span className="landing-title-script">action</span>
-        </h2>
-        <p className="landing-section-subtitle">A platform designed to feel like one shared room.</p>
-        <div className="landing-mockups" aria-hidden="true">
-          <div className="landing-mockup">
-            <div className="landing-mockup-header">Presence</div>
-            <div className="landing-mockup-body">
-              <div className="landing-mockup-cursor">
-                <span className="landing-mockup-cursor-dot" />
-                Alex
-              </div>
-              <div className="landing-mockup-cursor landing-mockup-cursor-alt">
-                <span className="landing-mockup-cursor-dot" />
-                Sam
-              </div>
-              <div className="landing-mockup-chat">
-                <span className="landing-mockup-chat-author">Sam</span>
-                <span>can you check the auth flow?</span>
-              </div>
-            </div>
-          </div>
-          <div className="landing-mockup">
-            <div className="landing-mockup-header">Terminal</div>
-            <div className="landing-mockup-body landing-mockup-terminal">
-              <div>$ npm test</div>
-              <div className="tok-fn">✓ all tests passed (12ms)</div>
-              <div className="tok-comment">exit code 0</div>
-            </div>
-          </div>
-          <div className="landing-mockup">
-            <div className="landing-mockup-header">My Projects</div>
-            <div className="landing-mockup-body">
-              <div className="landing-mockup-project">
-                <span className="landing-mockup-project-name">api-gateway</span>
-                <span className="landing-mockup-project-meta">private</span>
-                <span className="landing-mockup-badge">editor</span>
-              </div>
-              <div className="landing-mockup-project">
-                <span className="landing-mockup-project-name">design-system</span>
-                <span className="landing-mockup-project-meta">public</span>
-                <span className="landing-mockup-badge">owner</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <h2 className="landing-section-title">
-          Questions? We've got <span className="landing-title-script">answers</span>
-        </h2>
-        <div className="landing-faq">
-          {FAQS.map((item) => (
-            <details key={item.q} className="landing-faq-item">
-              <summary>
-                {item.q}
-                <span className="landing-faq-icon" aria-hidden="true">
-                  +
+            <Reveal key={step.label} delay={i * 0.07}>
+              <div className="group h-full rounded-lg border border-border bg-card/60 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary font-semibold text-primary-foreground">
+                  {i + 1}
                 </span>
-              </summary>
-              <p>{item.a}</p>
-            </details>
+                <h3 className="mt-4 font-semibold">{step.label}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="landing-section landing-closing">
-        <h2 className="landing-section-title">
-          Ready to start your next <span className="landing-title-script">project?</span>
-        </h2>
-        <p className="landing-section-subtitle">Free to join. Invite your team when you're ready.</p>
-        <button type="button" className="btn btn-primary landing-cta-btn" onClick={onGetStarted}>
-          Get started — it's free
-        </button>
+      {/* ------------------------------------------------------------- Features */}
+      <section className="px-6 py-20">
+        <Reveal>
+          <SectionTitle lead="Everything you need to" accent="ship" />
+          <p className="mt-4 text-center text-muted-foreground">
+            Real collaboration, a real sandbox, and real git — not a toy demo.
+          </p>
+        </Reveal>
+
+        <div className="mx-auto mt-12 grid max-w-6xl gap-5 sm:grid-cols-2">
+          {FEATURES.map((f, i) => {
+            const Icon = f.icon
+            return (
+              <Reveal key={f.title} delay={i * 0.07}>
+                <div className="group relative h-full overflow-hidden rounded-lg border border-border bg-card/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow">
+                  {/* Brand wash that only appears on hover, behind the content. */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 -z-10 bg-gradient-primary opacity-0 transition-opacity duration-300 group-hover:opacity-[0.06]"
+                  />
+                  <span className="inline-grid h-11 w-11 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+                    <Icon aria-hidden="true" size={20} />
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
+                  <p className="mt-1 text-muted-foreground">{f.body}</p>
+                  <ul className="mt-4 space-y-2">
+                    {f.bullets.map((b) => (
+                      <li key={b} className="flex items-start gap-2 text-sm">
+                        <Check aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-accent" />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            )
+          })}
+        </div>
       </section>
 
-      <footer className="landing-footer">
-        <span className="landing-footer-brand">
-          <span className="app-brand-mark">◆</span>CodeMesh
+      {/* -------------------------------------------------------- See it in action */}
+      <section className="px-6 py-20">
+        <Reveal>
+          <SectionTitle lead="See it in" accent="action" />
+          <p className="mt-4 text-center text-muted-foreground">
+            A platform designed to feel like one shared room.
+          </p>
+        </Reveal>
+
+        <div className="mx-auto mt-12 grid max-w-6xl gap-5 lg:grid-cols-3" aria-hidden="true">
+          <Reveal>
+            <div className="h-full rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
+                <Users aria-hidden="true" size={16} className="text-primary" />
+                Presence
+              </div>
+              <div className="space-y-3 p-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                  Alex
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+                  Sam
+                </div>
+                <div className="rounded-lg bg-muted/60 p-3 text-sm">
+                  <span className="mr-2 font-semibold text-accent">Sam</span>
+                  can you check the auth flow?
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.08}>
+            <div className="h-full rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
+                <Terminal aria-hidden="true" size={16} className="text-primary" />
+                Terminal
+              </div>
+              <div className="space-y-1 p-4 font-mono text-sm">
+                <div>$ npm test</div>
+                <div className="text-accent">✓ all tests passed (12ms)</div>
+                <div className="text-muted-foreground">exit code 0</div>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.16}>
+            <div className="h-full rounded-lg border border-border bg-card/60 backdrop-blur-sm">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
+                <MessageSquare aria-hidden="true" size={16} className="text-primary" />
+                My Projects
+              </div>
+              <div className="space-y-2 p-4">
+                {[
+                  { name: 'api-gateway', meta: 'private', role: 'editor' },
+                  { name: 'design-system', meta: 'public', role: 'owner' },
+                ].map((p) => (
+                  <div
+                    key={p.name}
+                    className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm"
+                  >
+                    <span className="font-medium">{p.name}</span>
+                    <span className="text-muted-foreground">{p.meta}</span>
+                    <span className="ml-auto rounded-pill bg-primary/15 px-2 py-0.5 text-xs text-primary">
+                      {p.role}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ FAQ */}
+      <section className="px-6 py-20">
+        <Reveal>
+          <SectionTitle lead="Questions? We've got" accent="answers" />
+        </Reveal>
+        <div className="mx-auto mt-12 max-w-3xl space-y-3">
+          {FAQS.map((item, i) => (
+            <Reveal key={item.q} delay={i * 0.05}>
+              <FaqItem
+                q={item.q}
+                a={item.a}
+                open={openFaq === item.q}
+                onToggle={() => setOpenFaq(openFaq === item.q ? null : item.q)}
+              />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------------- Closing */}
+      <section className="px-6 py-20">
+        <Reveal>
+          <div className="relative mx-auto max-w-4xl overflow-hidden rounded-lg border border-primary/25 bg-card/60 px-6 py-14 text-center backdrop-blur-sm">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 bg-gradient-primary opacity-[0.07]"
+            />
+            <SectionTitle lead="Ready to start your next" accent="project?" />
+            <p className="mt-4 text-muted-foreground">
+              Free to join. Invite your team when you're ready.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <ShimmerButton onClick={onGetStarted} className="shadow-glow text-[hsl(var(--on-brand))]">
+                <span className="inline-flex items-center gap-2">
+                  Get started — it's free
+                  <ArrowRight aria-hidden="true" size={18} />
+                </span>
+              </ShimmerButton>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* --------------------------------------------------------------- Footer */}
+      <footer className="mt-10 flex flex-col items-center gap-4 border-t border-border px-6 py-10 text-sm text-muted-foreground sm:flex-row sm:justify-between">
+        <span className="flex items-center gap-2 font-semibold text-foreground">
+          <span className="bg-gradient-primary bg-clip-text text-transparent">◆</span>
+          CodeMesh
         </span>
         <span>Real-time collaborative coding.</span>
-        <nav className="landing-footer-links">
-          <button type="button" className="link-button" onClick={() => onOpenLegal('privacy')}>
+        <nav className="flex gap-5">
+          <button
+            type="button"
+            className="transition-colors hover:text-primary"
+            onClick={() => onOpenLegal('privacy')}
+          >
             Privacy
           </button>
-          <button type="button" className="link-button" onClick={() => onOpenLegal('terms')}>
+          <button
+            type="button"
+            className="transition-colors hover:text-primary"
+            onClick={() => onOpenLegal('terms')}
+          >
             Terms
           </button>
         </nav>

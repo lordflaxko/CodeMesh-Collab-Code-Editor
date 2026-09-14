@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 const REPO_ISSUES = 'https://github.com/lordflaxko/CodeMesh-Collab-Code-Editor/issues'
 const LAST_UPDATED = 'September 2026'
 
@@ -9,10 +10,10 @@ interface LegalPageProps {
 function Privacy() {
   return (
     <>
-      <h1 className="legal-title">Privacy Policy</h1>
-      <p className="legal-updated">Last updated {LAST_UPDATED}</p>
+      <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
+      <p className="!mt-2 text-sm text-muted-foreground">Last updated {LAST_UPDATED}</p>
 
-      <p className="legal-lede">
+      <p className="!mt-6 text-base">
         CodeMesh is an open-source side project, not a company. This page describes exactly what
         the software stores and where it sends things, written from the code itself. It is a plain
         description rather than legal advice.
@@ -104,10 +105,10 @@ function Privacy() {
 function Terms() {
   return (
     <>
-      <h1 className="legal-title">Terms &amp; Conditions</h1>
-      <p className="legal-updated">Last updated {LAST_UPDATED}</p>
+      <h1 className="text-3xl font-bold tracking-tight">Terms &amp; Conditions</h1>
+      <p className="!mt-2 text-sm text-muted-foreground">Last updated {LAST_UPDATED}</p>
 
-      <p className="legal-lede">
+      <p className="!mt-6 text-base">
         CodeMesh is a free, open-source side project offered as-is. Using it means accepting what
         follows. This is a plain description rather than legal advice.
       </p>
@@ -174,12 +175,44 @@ function Terms() {
 
 function LegalPage({ kind, onBack }: LegalPageProps) {
   return (
-    <div className="legal-page">
-      <article className="legal-card">
+    <div className="relative px-6 py-16">
+      {/* Same faded brand wash as the landing hero and the auth card. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_50%_45%_at_50%_0%,black_20%,transparent_100%)]"
+      >
+        <div className="absolute left-1/2 top-[-12rem] h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
+      </div>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="mx-auto mb-6 flex max-w-3xl items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+      >
+        <ArrowLeft aria-hidden="true" size={15} />
+        Back
+      </button>
+
+      {/*
+        Prose styling is attached with arbitrary descendant variants rather than
+        by wrapping each paragraph in a class, so the two long documents above
+        stay plain readable JSX. Headings get generous top margin because these
+        pages are read in sections, not straight through.
+      */}
+      <article
+        className="mx-auto max-w-3xl rounded-lg border border-border bg-card/70 p-8 backdrop-blur-sm sm:p-10
+          [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:tracking-tight
+          [&_h2]:mt-10 [&_h2]:text-lg [&_h2]:font-semibold
+          [&_p]:mt-3 [&_p]:leading-relaxed [&_p]:text-muted-foreground
+          [&_li]:mt-2 [&_li]:text-muted-foreground
+          [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5
+          [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:opacity-80
+          [&_strong]:text-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm"
+      >
         {kind === 'privacy' ? <Privacy /> : <Terms />}
 
-        <div className="legal-contact">
-          <h2>Questions</h2>
+        <div className="mt-10 border-t border-border pt-6">
+          <h2 className="!mt-0">Questions</h2>
           <p>
             Anything about this page, your data, or the project itself is best raised as an issue on{' '}
             <a href={REPO_ISSUES} target="_blank" rel="noreferrer">
@@ -188,10 +221,6 @@ function LegalPage({ kind, onBack }: LegalPageProps) {
             .
           </p>
         </div>
-
-        <button type="button" className="btn" onClick={onBack}>
-          Back
-        </button>
       </article>
     </div>
   )

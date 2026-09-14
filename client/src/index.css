@@ -1,6 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4 replaces the old three @tailwind directives with one import.
+   The JS config is still the source of truth for this project's theme, so it
+   is pulled in explicitly -- v4 defaults to CSS-first configuration and will
+   not look for tailwind.config.ts on its own. Keeping the JS config means the
+   semantic color mapping below (and its <alpha-value> support) carries over
+   unchanged rather than being rewritten into @theme. */
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* v4 changed two Preflight defaults that this app's hand-written CSS was
+   written against under v3, so they are restored here rather than auditing
+   ~3,200 lines of component CSS for the difference:
+     - default border color went from the gray-200 token to currentColor,
+       which turned every un-colored 1px border into a text-colored line;
+     - buttons no longer get cursor: pointer. */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: hsl(var(--border-hsl));
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* ==========================================================================
    Semantic design tokens (HSL-based)
@@ -57,6 +81,15 @@
   --ring: 348 76% 68%;
 
   --radius: 0.875rem;
+
+  /* Ink for text sitting directly on a brand fill (the pink primary, the teal
+     accent, or the gradient between them). Deliberately NOT theme-dependent:
+     those fills are the same mid-tone in both themes, so flipping this to
+     white in light mode dropped contrast to 2.93:1 on pink and 3.17:1 on teal
+     -- below the 4.5:1 AA threshold -- while this dark ink measures 7.55:1 and
+     8.63:1 against them. Use it instead of --primary-foreground wherever text
+     is painted over a brand color rather than over the page background. */
+  --on-brand: 352 37% 12%;
 
   /* Functional tokens built from the HSL primitives above.
      --shadow-elegant is deliberately NOT built from --foreground: in dark

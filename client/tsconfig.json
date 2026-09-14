@@ -1,5 +1,13 @@
 {
   "files": [],
+  // The shadcn/Watermelon CLI resolves the "@/..." import alias by reading
+  // this file, and tsconfig.app.json carries the same pair so the compiler
+  // agrees. vite.config.ts repeats it once more for the bundler.
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }

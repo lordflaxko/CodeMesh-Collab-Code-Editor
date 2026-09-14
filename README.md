@@ -109,7 +109,8 @@ a deployment is protected unless someone deliberately opts out.
 
 ## Stack
 
-- **Client** — React 19 + TypeScript, Vite, CodeMirror 6 (via `y-codemirror.next`), and a design system of HSL CSS custom properties driving light/dark themes (Tailwind is configured and available, but the components are styled with the hand-written stylesheet)
+- **Client** — React 19 + TypeScript, Vite, CodeMirror 6 (via `y-codemirror.next`), and a design system of HSL CSS custom properties driving light/dark themes
+- **Styling** — Tailwind CSS v4 (as a Vite plugin; the theme still comes from `tailwind.config.ts` via `@config`) over those same custom properties, so utilities and the hand-written stylesheet read the identical tokens. The marketing and auth surfaces — landing, login/signup, explore, and the legal pages — are built from Tailwind utilities and [Watermelon UI](https://ui.watermelon.sh/) components copied into `src/components/watermelon/`; the workspace and its panels are still styled by `src/App.css`. Motion comes from `motion`, icons from `lucide-react`
 - **Server** — Node.js, `ws` + `y-websocket`, with accounts/projects/invites/notifications in plain JSON files
 - **Sync** — Yjs CRDTs over WebSocket. Every document, chat thread, comment, and activity entry is a shared Yjs type, so the server stays a relay rather than a source of truth
 - **Execution** — a self-hosted Piston instance; the containerised features (Deploy, Install & Run, debugging) shell out to the `docker` CLI on the host
