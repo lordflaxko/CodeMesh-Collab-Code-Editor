@@ -27,7 +27,12 @@ function CollabSidebar({ awareness, ydoc, user, room, participants }: CollabSide
           {users.map((u) => (
             <li key={u.clientId} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
               <span
-                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-[hsl(var(--on-brand))]"
+                // The fill comes from --chip-color, set inline below from the
+                // collaborator's own colour. It has to be consumed here: the
+                // rule that used to read the variable lived on the old
+                // .collab-sidebar-avatar class, so without this the circle
+                // renders with no background and the initial disappears.
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--chip-color,#9ca3af)] text-[10px] font-semibold text-[hsl(var(--on-brand))]"
                 style={{ '--chip-color': u.color } as CSSProperties}
               >
                 {u.name.slice(0, 1).toUpperCase()}
