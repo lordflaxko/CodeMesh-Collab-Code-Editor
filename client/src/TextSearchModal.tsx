@@ -40,10 +40,10 @@ function TextSearchModal({ getAllFiles, onJump, onClose }: TextSearchModalProps)
   }
 
   return (
-    <div className="symbol-search-backdrop" onClick={onClose}>
-      <div className="symbol-search-modal text-search-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-sm" onClick={onClose}>
+      <div className="symbol-search-modal text-search-modal w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card/95 shadow-elegant backdrop-blur-md" onClick={(e) => e.stopPropagation()}>
         <input
-          className="text-input"
+          className="text-input w-full border-0 border-b border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
           autoFocus
           placeholder="Find in files…"
           value={query}
@@ -53,16 +53,18 @@ function TextSearchModal({ getAllFiles, onJump, onClose }: TextSearchModalProps)
           }}
           onKeyDown={handleKeyDown}
         />
-        <ul className="symbol-search-results">
+        <ul className="max-h-[50vh] overflow-y-auto p-1.5">
           {query.trim() === '' ? (
-            <li className="sc-empty">Type to search across all files</li>
+            <li className="sc-empty px-4 py-8 text-center text-sm text-muted-foreground">Type to search across all files</li>
           ) : results.length === 0 ? (
-            <li className="sc-empty">No matches</li>
+            <li className="sc-empty px-4 py-8 text-center text-sm text-muted-foreground">No matches</li>
           ) : (
             results.map((m, i) => (
               <li
                 key={`${m.fileId}:${m.from}`}
-                className={i === highlighted ? 'symbol-result is-active' : 'symbol-result'}
+                className={`symbol-result flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  i === highlighted ? 'bg-primary/15 text-primary' : 'hover:bg-muted'
+                }`}
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => jump(m)}
               >

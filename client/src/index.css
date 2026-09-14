@@ -428,3 +428,86 @@ code {
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* ==========================================================================
+   Editor syntax palette
+   ==========================================================================
+   Consumed by src/editorTheme.ts, which builds the CodeMirror HighlightStyle
+   from these rather than hard-coding colours. Keeping them here means the code
+   surface follows the same light/dark switch as the rest of the app, and a
+   colour can be retuned without touching the editor wiring.
+
+   These replace @codemirror/theme-one-dark, which only applied in dark mode --
+   light mode fell through to CodeMirror's stock theme and looked unrelated to
+   the product. Each value is checked against the editor background for at
+   least 4.5:1, since syntax is small text people read for hours.
+   ========================================================================== */
+
+:root {
+  --syn-keyword: #b03a5e;
+  --syn-function: #0f6f68;
+  --syn-string: #7a5c15;
+  --syn-number: #6d38a0;
+  --syn-comment: #6e675f;
+  --syn-type: #1a6183;
+  --syn-variable: #3a3330;
+  --syn-operator: #5f5751;
+  --syn-invalid: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --syn-keyword: #f49aac;
+    --syn-function: #5fd9c9;
+    --syn-string: #e6c384;
+    --syn-number: #cba6f7;
+    --syn-comment: #9a918a;
+    --syn-type: #8fc9e8;
+    --syn-variable: #e8e2d9;
+    --syn-operator: #b5ada4;
+    --syn-invalid: #ff8080;
+  }
+}
+
+:root[data-theme='dark'] {
+  --syn-keyword: #f49aac;
+  --syn-function: #5fd9c9;
+  --syn-string: #e6c384;
+  --syn-number: #cba6f7;
+  --syn-comment: #9a918a;
+  --syn-type: #8fc9e8;
+  --syn-variable: #e8e2d9;
+  --syn-operator: #b5ada4;
+  --syn-invalid: #ff8080;
+}
+
+/* The workspace forces the dark palette regardless of the OS preference (see
+   `:root:has(.workspace-page)` above) -- the code surface is always dark unless
+   the user explicitly picks the light theme. The syntax palette has to follow
+   that same rule rather than prefers-color-scheme, or a system-light visitor
+   gets dark-surface syntax colours on a dark editor: measured 1.38:1 on
+   identifiers before this block existed. */
+
+:root:has(.workspace-page) {
+  --syn-keyword: #f49aac;
+  --syn-function: #5fd9c9;
+  --syn-string: #e6c384;
+  --syn-number: #cba6f7;
+  --syn-comment: #9a918a;
+  --syn-type: #8fc9e8;
+  --syn-variable: #e8e2d9;
+  --syn-operator: #b5ada4;
+  --syn-invalid: #ff8080;
+}
+
+:root[data-theme='light']:has(.workspace-page) {
+  --syn-keyword: #b03a5e;
+  --syn-function: #0f6f68;
+  --syn-string: #7a5c15;
+  --syn-number: #6d38a0;
+  --syn-comment: #6e675f;
+  --syn-type: #1a6183;
+  --syn-variable: #3a3330;
+  --syn-operator: #5f5751;
+  --syn-invalid: #b3261e;
+}

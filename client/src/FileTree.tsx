@@ -39,19 +39,23 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
   }
 
   return (
-    <div className="file-tree">
-      <div className="file-tree-header">
+    <div className="file-tree relative h-fit w-[200px] shrink-0 overflow-hidden rounded-lg border border-border bg-card/70 shadow-elegant backdrop-blur-sm before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[2px] before:bg-gradient-primary before:content-['']">
+      <div className="file-tree-header flex items-center justify-between border-b border-border px-3.5 py-2.5 text-xs font-semibold">
         <span>Files</span>
         {!readOnly && (
-          <button type="button" className="btn btn-small" onClick={() => setCreating(true)}>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            onClick={() => setCreating(true)}
+          >
             + New
           </button>
         )}
       </div>
       {!readOnly && creating && (
-        <form className="file-tree-new" onSubmit={submitCreate}>
+        <form className="border-b border-border p-1.5" onSubmit={submitCreate}>
           <input
-            className="text-input"
+            className="w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
             autoFocus
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
@@ -60,13 +64,18 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
           />
         </form>
       )}
-      <ul className="file-tree-list">
+      <ul className="max-h-[480px] list-none overflow-y-auto p-1.5">
         {files.map((file) => (
-          <li key={file.id} className={file.id === activeId ? 'is-active' : ''}>
+          <li
+            key={file.id}
+            className={`group flex items-center gap-1 rounded-md pr-1 transition-colors ${
+              file.id === activeId ? 'is-active bg-primary/15 text-primary' : 'hover:bg-muted'
+            }`}
+          >
             {renamingId === file.id ? (
               <form onSubmit={submitRename}>
                 <input
-                  className="text-input"
+                  className="w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
                   autoFocus
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
@@ -77,7 +86,7 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
               <>
                 <button
                   type="button"
-                  className="file-tree-item"
+                  className="file-tree-item min-w-0 flex-1 truncate px-2 py-1.5 text-left text-sm"
                   onClick={() => onSelect(file.id)}
                   onDoubleClick={readOnly ? undefined : () => startRename(file)}
                   title={readOnly ? undefined : 'Double-click to rename'}
@@ -87,7 +96,7 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
                 {!readOnly && (
                   <button
                     type="button"
-                    className="file-tree-delete"
+                    className="shrink-0 rounded px-1 text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
                     title="Delete file"
                     onClick={() => {
                       if (files.length <= 1) return

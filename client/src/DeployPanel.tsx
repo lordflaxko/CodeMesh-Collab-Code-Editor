@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useEffect, useState } from 'react'
 import { startDeployment, stopDeployment, previewUrl, type DeployResult } from './deploy'
 
@@ -23,6 +24,9 @@ function formatRemaining(ms: number) {
 // it auto-stops after 15 minutes, capping the abuse/resource risk of a
 // preview that's reachable by anyone with its (unguessable) link, unlike
 // Run/Install & Run which never expose a network port to the outside world.
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
+
 function DeployPanel({ room, sessionToken, getAllFiles, onClose }: DeployPanelProps) {
   const [deploying, setDeploying] = useState(false)
   const [stopping, setStopping] = useState(false)
@@ -58,21 +62,20 @@ function DeployPanel({ room, sessionToken, getAllFiles, onClose }: DeployPanelPr
   const expired = deployment != null && deployment.expiresAt <= now
 
   return (
-    <div className="deploy-panel">
-      <div className="chat-panel-header">
-        <span>Deploy</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="deploy-panel-body">
-        <div className="sc-remote-note">
+    <Panel
+      title="Deploy"
+      onClose={onClose}
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="space-y-3">
+        <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
           Deploys a snapshot of the current files as a live preview for 15 minutes. With a
           package.json it runs as a Node server (must listen on process.env.PORT); otherwise it's
           served as a static site (needs an index.html).
         </div>
         {!deployment || expired ? (
-          <button type="button" className="btn btn-small" onClick={handleDeploy} disabled={deploying}>
+          <button type="button" className={BTN} onClick={handleDeploy} disabled={deploying}>
             {deploying ? 'Deploying…' : 'Deploy'}
           </button>
         ) : (
@@ -81,16 +84,16 @@ function DeployPanel({ room, sessionToken, getAllFiles, onClose }: DeployPanelPr
               <a className="deploy-link" href={previewUrl(deployment.token)} target="_blank" rel="noreferrer">
                 {previewUrl(deployment.token)}
               </a>
-              <span className="comment-time">expires in {formatRemaining(deployment.expiresAt - now)}</span>
+              <span className="text-xs text-muted-foreground">expires in {formatRemaining(deployment.expiresAt - now)}</span>
             </div>
             <button type="button" className="btn btn-small btn-danger" onClick={handleStop} disabled={stopping}>
               {stopping ? 'Stopping…' : 'Stop'}
             </button>
           </>
         )}
-        {error && <div className="format-error">{error}</div>}
+        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       </div>
-    </div>
+    </Panel>
   )
 }
 

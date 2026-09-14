@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useEffect, useState } from 'react'
 import type * as Y from 'yjs'
 import { useAiChat, askAssistant } from './aiChat'
@@ -18,6 +19,9 @@ interface AIChatPanelProps {
 function timeLabel(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
+
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
 
 function AIChatPanel({
   ydoc,
@@ -52,16 +56,15 @@ function AIChatPanel({
   }
 
   return (
-    <div className="ai-chat-panel">
-      <div className="chat-panel-header">
-        <span>AI Assistant</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="chat-messages">
+    <Panel
+      title="AI Assistant"
+      onClose={onClose}
+      className="ai-chat-panel h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="chat-messages max-h-[320px] space-y-3 overflow-y-auto">
         {messages.length === 0 ? (
-          <div className="sc-empty">
+          <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">
             Ask a question about the currently open file, or about this project in general.
           </div>
         ) : (
@@ -70,19 +73,19 @@ function AIChatPanel({
               key={message.id}
               className={`chat-message${message.role === 'assistant' ? ' ai-message' : ''}`}
             >
-              <span className="comment-author">
+              <span className="text-sm font-semibold">
                 {message.role === 'assistant' ? 'Assistant' : message.author}
               </span>{' '}
-              <span className="comment-time">{timeLabel(message.timestamp)}</span>
+              <span className="text-xs text-muted-foreground">{timeLabel(message.timestamp)}</span>
               <p className={`comment-text ai-message-text${message.error ? ' ai-message-error' : ''}`}>
                 {message.text}
               </p>
             </div>
           ))
         )}
-        {asking && <div className="sc-loading">Thinking…</div>}
+        {asking && <div className="sc-loading px-2 py-6 text-center text-sm text-muted-foreground">Thinking…</div>}
       </div>
-      {error && <div className="format-error">{error}</div>}
+      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       <form
         className="chat-compose"
         onSubmit={(e) => {
@@ -91,17 +94,17 @@ function AIChatPanel({
         }}
       >
         <input
-          className="text-input"
+          className={FIELD}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Ask about this code…"
           disabled={asking}
         />
-        <button type="submit" className="btn btn-small btn-primary" disabled={asking || !draft.trim()}>
+        <button type="submit" className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" disabled={asking || !draft.trim()}>
           {asking ? 'Asking…' : 'Ask'}
         </button>
       </form>
-    </div>
+    </Panel>
   )
 }
 

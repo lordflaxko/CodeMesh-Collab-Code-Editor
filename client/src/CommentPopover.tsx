@@ -32,6 +32,11 @@ function timeLabel(createdAt: number) {
   return new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:border-primary/50 hover:text-primary'
+
 function CommentPopover(props: CommentPopoverProps) {
   useEscapeToClose(props.onClose)
   const [draft, setDraft] = useState('')
@@ -42,9 +47,12 @@ function CommentPopover(props: CommentPopoverProps) {
 
   if (props.mode === 'new') {
     return (
-      <div className="comment-popover" style={style}>
+      <div
+      className="comment-popover z-50 w-[320px] overflow-hidden rounded-lg border border-border bg-card/95 shadow-elegant backdrop-blur-md"
+      style={style}
+    >
         <MentionInput
-          className="comment-textarea"
+          className={`${FIELD} min-h-[60px] resize-y`}
           value={draft}
           onChange={setDraft}
           participants={props.participants}
@@ -52,16 +60,16 @@ function CommentPopover(props: CommentPopoverProps) {
           multiline
           autoFocus
         />
-        <div className="comment-popover-actions">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="btn btn-small"
+            className={BTN}
             disabled={!draft.trim()}
             onClick={() => draft.trim() && props.onSubmit(draft.trim())}
           >
             Comment
           </button>
-          <button type="button" className="btn btn-small" onClick={props.onClose}>
+          <button type="button" className={BTN} onClick={props.onClose}>
             Cancel
           </button>
         </div>
@@ -79,22 +87,25 @@ function CommentPopover(props: CommentPopoverProps) {
   }
 
   return (
-    <div className="comment-popover" style={style}>
-      <div className="comment-popover-header">
-        <button type="button" className="btn btn-small" onClick={props.onToggleResolved}>
+    <div
+      className="comment-popover z-50 w-[320px] overflow-hidden rounded-lg border border-border bg-card/95 shadow-elegant backdrop-blur-md"
+      style={style}
+    >
+      <div className="flex items-center justify-end gap-1.5 border-b border-border px-2.5 py-2">
+        <button type="button" className={BTN} onClick={props.onToggleResolved}>
           {thread.resolved ? 'Reopen' : 'Resolve'}
         </button>
-        <button type="button" className="btn btn-small" onClick={props.onClose}>
+        <button type="button" className={BTN} onClick={props.onClose}>
           Close
         </button>
       </div>
-      <ul className="comment-thread">
-        <li className="comment-item">
-          <span className="comment-author" style={{ color: thread.color }}>
+      <ul className="max-h-[280px] space-y-2 overflow-y-auto p-2.5">
+        <li className="rounded-md bg-muted/30 p-2.5">
+          <span className="text-sm font-semibold" style={{ color: thread.color }}>
             {thread.author}
           </span>{' '}
-          <span className="comment-time">{timeLabel(thread.createdAt)}</span>
-          <p className="comment-text">
+          <span className="text-xs text-muted-foreground">{timeLabel(thread.createdAt)}</span>
+          <p className="mt-1 whitespace-pre-wrap break-words text-sm">
             <MentionText text={thread.text} />
           </p>
           <Reactions
@@ -104,12 +115,12 @@ function CommentPopover(props: CommentPopoverProps) {
           />
         </li>
         {thread.replies.map((reply) => (
-          <li key={reply.id} className="comment-item comment-reply">
-            <span className="comment-author" style={{ color: reply.color }}>
+          <li key={reply.id} className="ml-3 rounded-md border-l-2 border-border bg-muted/40 p-2">
+            <span className="text-sm font-semibold" style={{ color: reply.color }}>
               {reply.author}
             </span>{' '}
-            <span className="comment-time">{timeLabel(reply.createdAt)}</span>
-            <p className="comment-text">
+            <span className="text-xs text-muted-foreground">{timeLabel(reply.createdAt)}</span>
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
               <MentionText text={reply.text} />
             </p>
             <Reactions
@@ -120,15 +131,15 @@ function CommentPopover(props: CommentPopoverProps) {
           </li>
         ))}
       </ul>
-      <form className="comment-reply-form" onSubmit={submitReply}>
+      <form className="comment-reply-form flex items-center gap-2 border-t border-border p-2.5" onSubmit={submitReply}>
         <MentionInput
-          className="text-input"
+          className={FIELD}
           value={draft}
           onChange={setDraft}
           participants={props.participants}
           placeholder="Reply…"
         />
-        <button type="submit" className="btn btn-small" disabled={!draft.trim()}>
+        <button type="submit" className={BTN} disabled={!draft.trim()}>
           Reply
         </button>
       </form>

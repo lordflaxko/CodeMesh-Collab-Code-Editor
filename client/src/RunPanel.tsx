@@ -3,7 +3,7 @@ import type { LanguageConfig } from './languages'
 import { injectLogpoints, parseDebugLine, MARKER_START, type ResolvedBreakpoint } from './logpoints'
 import TerminalView, { type TerminalHandle } from './TerminalView'
 import { WS_SERVER_URL } from './api'
-import { PlayIcon } from './icons'
+import { Package, Play, Square } from 'lucide-react'
 
 interface OutputSegment {
   stream: 'stdout' | 'stderr' | 'stdin'
@@ -44,6 +44,15 @@ interface RunPanelProps {
 const INSTALL_RUN_FORBIDDEN_CODE = 4003
 const BACKSPACE_CODES = new Set([8, 127])
 const CTRL_C_CODE = 3
+
+// run-output-* / run-stdin / debug-hit-* class names below are retained only as
+// hooks for the end-to-end suite; their App.css rules are gone and the styling
+// lives in the utilities beside them.
+const RUN_BTN =
+  'inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50'
+const SMALL_BTN =
+  'inline-flex items-center gap-1.5 rounded-pill border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
+
 
 function RunPanel({
   language,
@@ -293,25 +302,35 @@ function RunPanel({
   }
 
   return (
-    <div className="run-panel">
-      <div className="run-panel-controls">
+    <div className="run-panel border-t border-border bg-muted/20">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
         {running ? (
-          <button type="button" className="btn btn-run btn-stop" onClick={handleStop}>
-            ■ Stop
+          <button
+            type="button"
+            className={`${RUN_BTN} bg-destructive/90 text-white hover:brightness-110`}
+            onClick={handleStop}
+          >
+            <Square aria-hidden="true" size={14} fill="currentColor" />
+            Stop
           </button>
         ) : (
-          <button type="button" className="btn btn-run" onClick={handleRun}>
-            <PlayIcon />
+          <button
+            type="button"
+            className={`${RUN_BTN} bg-gradient-primary text-[hsl(var(--on-brand))] shadow-glow hover:brightness-110`}
+            onClick={handleRun}
+          >
+            <Play aria-hidden="true" size={14} fill="currentColor" />
             {status === 'idle' ? 'Run' : 'Run again'}
           </button>
         )}
         {!running && language.id === 'javascript' && (
-          <button type="button" className="btn btn-small" onClick={handleInstallAndRun}>
-            📦 Install &amp; Run
+          <button type="button" className={SMALL_BTN} onClick={handleInstallAndRun}>
+            <Package aria-hidden="true" size={13} />
+            Install &amp; Run
           </button>
         )}
         <input
-          className="text-input run-stdin sr-only"
+          className="run-stdin sr-only"
           value={stdinDraft}
           onChange={(e) => setStdinDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -323,15 +342,15 @@ function RunPanel({
         />
       </div>
       {debugHits.length > 0 && (
-        <div className="debug-hits">
-          <div className="debug-hits-label">Debug values</div>
+        <div className="border-t border-border px-3 py-2">
+          <div className="mb-1.5 text-xs font-semibold text-muted-foreground">Debug values</div>
           {debugHits.map((hit, i) => {
             const bp = breakpoints.find((b) => b.id === hit.breakpointId)
             return (
-              <div key={hit.id} className="debug-hit-item">
-                <span className="debug-hit-index">#{i + 1}</span>
-                {bp && <span className="debug-hit-line">Line {bp.lineNumber}:</span>}
-                <span className="debug-hit-text">{hit.text.trim()}</span>
+              <div key={hit.id} className="debug-hit-item flex items-center gap-2 py-0.5 font-mono text-xs">
+                <span className="rounded bg-primary/15 px-1.5 text-primary">#{i + 1}</span>
+                {bp && <span className="text-muted-foreground">Line {bp.lineNumber}:</span>}
+                <span className="truncate">{hit.text.trim()}</span>
               </div>
             )
           })}
@@ -339,8 +358,8 @@ function RunPanel({
       )}
       <TerminalView ref={terminalRef} isDark={isDark} onData={handleTerminalData} />
       {(output.length > 0 || error || exitInfo) && (
-        <div className="run-output">
-          {error && <div className="run-output-error">{error}</div>}
+        <div className="run-output border-t border-border px-3 py-2 font-mono text-xs">
+          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-destructive">{error}</div>}
           {output.length === 0 && !error && (
             <div className="run-output-empty sr-only">(no output yet)</div>
           )}
@@ -350,18 +369,18 @@ function RunPanel({
             </pre>
           ))}
           {exitInfo && (
-            <div className="run-output-exit">
+            <div className="run-output-exit flex items-center gap-2 pt-1 text-muted-foreground">
               Exit code: {exitInfo.code ?? '—'}
               {exitInfo.signal && ` (${exitInfo.signal})`} · {exitInfo.wallTimeMs}ms
               {hasFailure && (
-                <button type="button" className="btn btn-small run-debug-ai" onClick={handleDebugWithAI}>
+                <button type="button" className={SMALL_BTN} onClick={handleDebugWithAI}>
                   Debug with AI
                 </button>
               )}
             </div>
           )}
           {status === 'stopped' && (
-            <div className="run-output-exit">
+            <div className="run-output-exit flex items-center gap-2 pt-1 text-muted-foreground">
               Stopped -- the sandboxed process may keep running briefly server-side.
             </div>
           )}

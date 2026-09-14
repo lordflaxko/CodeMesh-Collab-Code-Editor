@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useState } from 'react'
 import type * as Y from 'yjs'
 import { Smile } from 'lucide-react'
@@ -27,6 +28,11 @@ function notifyMentionsIn(text: string, user: Author, room: string) {
     notifyMention(name, user.name, room, text)
   }
 }
+
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
 
 function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) {
   const messages = useChat(ydoc)
@@ -63,23 +69,15 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
   }
 
   return (
-    <div className="chat-panel">
-      <div className="chat-panel-header">
-        <span>Chat</span>
-        {onClose && (
-          <button type="button" className="btn btn-small" onClick={onClose}>
-            Close
-          </button>
-        )}
-      </div>
-      <div className="chat-messages">
+    <Panel title="Chat" onClose={onClose} bodyClassName="flex flex-col">
+      <div className="chat-messages max-h-[320px] flex-1 space-y-3 overflow-y-auto p-3">
         {messages.map((message) => (
-          <div key={message.id} className="chat-message">
-            <span className="comment-author" style={{ color: message.color }}>
+          <div key={message.id} className="chat-message rounded-md bg-muted/30 p-2.5">
+            <span className="text-sm font-semibold" style={{ color: message.color }}>
               {message.author}
             </span>{' '}
-            <span className="comment-time">{timeLabel(message.createdAt)}</span>
-            <p className="comment-text">
+            <span className="text-xs text-muted-foreground">{timeLabel(message.createdAt)}</span>
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
               <MentionText text={message.text} />
             </p>
             <Reactions
@@ -89,7 +87,7 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
             />
             <button
               type="button"
-              className="btn btn-small chat-reply-toggle"
+              className="mt-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
               onClick={() => toggleExpanded(message.id)}
             >
               {message.replies.length > 0
@@ -97,14 +95,14 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
                 : 'Reply'}
             </button>
             {expanded.has(message.id) && (
-              <div className="chat-thread">
+              <div className="chat-thread mt-2 space-y-2 border-l-2 border-border pl-2.5">
                 {message.replies.map((reply) => (
-                  <div key={reply.id} className="chat-message chat-reply">
-                    <span className="comment-author" style={{ color: reply.color }}>
+                  <div key={reply.id} className="chat-message rounded-md bg-muted/40 p-2">
+                    <span className="text-sm font-semibold" style={{ color: reply.color }}>
                       {reply.author}
                     </span>{' '}
-                    <span className="comment-time">{timeLabel(reply.createdAt)}</span>
-                    <p className="comment-text">
+                    <span className="text-xs text-muted-foreground">{timeLabel(reply.createdAt)}</span>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm">
                       <MentionText text={reply.text} />
                     </p>
                     <Reactions
@@ -122,7 +120,7 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
                   }}
                 >
                   <MentionInput
-                    className="text-input"
+                    className={FIELD}
                     value={replyDrafts[message.id] ?? ''}
                     onChange={(value) =>
                       setReplyDrafts((current) => ({ ...current, [message.id]: value }))
@@ -133,7 +131,7 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
                   <EmojiPickerButton
                     onPick={(emoji) => appendToReply(message.id, emoji)}
                     label="Add emoji to reply"
-                    className="btn btn-small compose-emoji-btn"
+                    className={`${BTN} h-8 w-8 justify-center p-0`}
                   >
                     <Smile size={14} aria-hidden="true" />
                   </EmojiPickerButton>
@@ -151,14 +149,14 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
         ))}
       </div>
       <form
-        className="chat-compose"
+        className="chat-compose flex shrink-0 items-center gap-2 border-t border-border p-2.5"
         onSubmit={(e) => {
           e.preventDefault()
           submitMessage()
         }}
       >
         <MentionInput
-          className="text-input"
+          className={FIELD}
           value={draft}
           onChange={setDraft}
           participants={participants}
@@ -171,11 +169,15 @@ function ChatPanel({ ydoc, user, room, participants, onClose }: ChatPanelProps) 
         >
           <Smile size={14} aria-hidden="true" />
         </EmojiPickerButton>
-        <button type="submit" className="btn btn-small btn-primary" disabled={!draft.trim()}>
+        <button
+          type="submit"
+          className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!draft.trim()}
+        >
           Send
         </button>
       </form>
-    </div>
+    </Panel>
   )
 }
 

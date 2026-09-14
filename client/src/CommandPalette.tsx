@@ -46,10 +46,10 @@ function CommandPalette({ commands, onClose }: CommandPaletteProps) {
   }
 
   return (
-    <div className="command-palette-backdrop" onClick={onClose}>
-      <div className="command-palette-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card/95 shadow-elegant backdrop-blur-md" onClick={(e) => e.stopPropagation()}>
         <input
-          className="text-input"
+          className="text-input w-full border-0 border-b border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
           autoFocus
           placeholder="Type a command…"
           value={query}
@@ -59,19 +59,21 @@ function CommandPalette({ commands, onClose }: CommandPaletteProps) {
           }}
           onKeyDown={handleKeyDown}
         />
-        <ul className="command-palette-results">
+        <ul className="max-h-[50vh] overflow-y-auto p-1.5">
           {results.length === 0 ? (
-            <li className="sc-empty">No matching commands</li>
+            <li className="sc-empty px-4 py-8 text-center text-sm text-muted-foreground">No matching commands</li>
           ) : (
             results.map((c, i) => (
               <li
                 key={c.id}
-                className={i === highlighted ? 'command-result is-active' : 'command-result'}
+                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  i === highlighted ? 'bg-primary/15 text-primary' : 'hover:bg-muted'
+                }`}
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => run(c)}
               >
-                <span className="command-group">{c.group}</span>
-                <span className="command-label">{c.label}</span>
+                <span className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{c.group}</span>
+                <span className="flex-1 truncate">{c.label}</span>
               </li>
             ))
           )}

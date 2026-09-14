@@ -43,7 +43,7 @@ function ProjectView({ projectId, token, user, isDark, onGoToDashboard }: Projec
       <div className="workspace-page">
         <div className="unlock-gate">
           <p>{state.message}</p>
-          <button type="button" className="btn" onClick={onGoToDashboard}>
+          <button type="button" className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:text-primary" onClick={onGoToDashboard}>
             Back to Dashboard
           </button>
         </div>
@@ -56,27 +56,29 @@ function ProjectView({ projectId, token, user, isDark, onGoToDashboard }: Projec
   return (
     <div className="workspace-page">
       <div className="workspace-glow" aria-hidden="true" />
-      <div className="doc-bar">
-        <span className="doc-id">
-          Project: <code>{project.name}</code> <span className="role-badge">{role}</span>
+      <div className="relative mb-5 flex flex-wrap items-center gap-2 overflow-hidden rounded-lg border border-border bg-card/70 px-4 py-3 shadow-elegant backdrop-blur-sm before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-gradient-primary before:content-['']">
+        <span className="doc-id mr-auto flex items-center gap-2 text-sm">
+          Project: <code>{project.name}</code> <span className="role-badge rounded-pill bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+            {role}
+          </span>
         </span>
         <button
           type="button"
-          className="btn"
+          className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:text-primary"
           onClick={() => navigator.clipboard.writeText(window.location.href)}
         >
           Copy link
         </button>
         <a
-          className="btn"
+          className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:text-primary"
           href={`${SERVER_URL}/export/${encodeURIComponent(project.id)}?token=${encodeURIComponent(token ?? '')}`}
         >
           Download .zip
         </a>
-        <button type="button" className="btn" onClick={() => setMembersOpen((v) => !v)}>
+        <button type="button" className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:text-primary" onClick={() => setMembersOpen((v) => !v)}>
           Members
         </button>
-        <button type="button" className="btn" onClick={onGoToDashboard}>
+        <button type="button" className="rounded-md border border-border bg-card/70 px-3 py-1.5 text-sm transition-colors hover:border-primary/50 hover:text-primary" onClick={onGoToDashboard}>
           Dashboard
         </button>
       </div>

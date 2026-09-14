@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useEffect, useState } from 'react'
 import type * as Y from 'yjs'
 import {
@@ -29,6 +30,11 @@ function fileKindFor(status: string): string {
   if (status === 'D') return 'deleted'
   return 'modified'
 }
+
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
 
 function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
   const [branches, setBranches] = useState<GitBranches | null>(null)
@@ -89,21 +95,20 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
   }
 
   return (
-    <div className="review-panel">
-      <div className="chat-panel-header">
-        <span>Review</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="review-body">
+    <Panel
+      title="Review"
+      onClose={onClose}
+      className="review-panel h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="space-y-3">
         {!review && (
           <div className="review-request-form">
-            <div className="sc-empty">No open review for branch "{currentBranch || '…'}".</div>
+            <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No open review for branch "{currentBranch || '…'}".</div>
             {canEdit && (
               <div className="review-request-row">
                 <select
-                  className="text-input"
+                  className={FIELD}
                   value={baseBranch}
                   onChange={(e) => setBaseBranch(e.target.value)}
                 >
@@ -118,7 +123,7 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
                 </select>
                 <button
                   type="button"
-                  className="btn btn-small btn-primary"
+                  className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={handleRequest}
                   disabled={!baseBranch}
                 >
@@ -134,7 +139,7 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
               <div>
                 <strong>{review.branch}</strong> vs <strong>{review.baseBranch}</strong>
               </div>
-              <div className="comment-time">Requested by {review.requestedBy}</div>
+              <div className="text-xs text-muted-foreground">Requested by {review.requestedBy}</div>
               <span className={`review-status review-status-${review.status}`}>
                 {review.status === 'open'
                   ? 'Awaiting review'
@@ -143,8 +148,8 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
                     : 'Changes requested'}
               </span>
             </div>
-            {error && <div className="format-error">{error}</div>}
-            <div className="sc-file-list">
+            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+            <div className="space-y-1">
               {(changedFiles ?? []).map((f) => (
                 <button
                   key={f.path}
@@ -159,12 +164,12 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
                 </button>
               ))}
               {changedFiles && changedFiles.length === 0 && (
-                <div className="sc-empty">No differences from {review.baseBranch}</div>
+                <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No differences from {review.baseBranch}</div>
               )}
             </div>
             {selectedFile && (
-              <div className="sc-diff-viewer">
-                <div className="sc-diff-header">{selectedFile}</div>
+              <div className="overflow-hidden rounded-md border border-border">
+                <div className="border-b border-border bg-muted/40 px-2.5 py-1.5 font-mono text-xs">{selectedFile}</div>
                 <pre className="sc-diff">
                   {(diff ?? 'Loading diff…').split('\n').map((line, i) => (
                     <div key={i} className={`sc-diff-line ${diffLineClass(line)}`}>
@@ -177,34 +182,34 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
             <div className="review-decisions">
               {review.decisions.map((d) => (
                 <div key={d.id} className="review-decision-item">
-                  <span className="comment-author">{d.reviewer}</span>{' '}
+                  <span className="text-sm font-semibold">{d.reviewer}</span>{' '}
                   <span className={`review-verdict review-verdict-${d.verdict}`}>
                     {d.verdict === 'approved' ? 'approved' : 'requested changes'}
                   </span>
-                  {d.comment && <p className="comment-text">{d.comment}</p>}
+                  {d.comment && <p className="mt-1 whitespace-pre-wrap break-words text-sm">{d.comment}</p>}
                 </div>
               ))}
             </div>
             {canEdit && (
               <div className="review-actions">
                 <textarea
-                  className="comment-textarea"
+                  className={`${FIELD} min-h-[70px] resize-y`}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Optional comment"
                 />
                 <div className="review-action-buttons">
-                  <button type="button" className="btn btn-small" onClick={() => handleDecision('approved')}>
+                  <button type="button" className={BTN} onClick={() => handleDecision('approved')}>
                     Approve
                   </button>
                   <button
                     type="button"
-                    className="btn btn-small"
+                    className={BTN}
                     onClick={() => handleDecision('changes_requested')}
                   >
                     Request changes
                   </button>
-                  <button type="button" className="btn btn-small" onClick={handleClose}>
+                  <button type="button" className={BTN} onClick={handleClose}>
                     Close review
                   </button>
                 </div>
@@ -213,7 +218,7 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
           </>
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 

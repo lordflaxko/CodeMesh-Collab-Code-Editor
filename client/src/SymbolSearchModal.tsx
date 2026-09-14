@@ -40,10 +40,10 @@ function SymbolSearchModal({ symbols, onJump, onClose }: SymbolSearchModalProps)
   }
 
   return (
-    <div className="symbol-search-backdrop" onClick={onClose}>
-      <div className="symbol-search-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-sm" onClick={onClose}>
+      <div className="symbol-search-modal w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card/95 shadow-elegant backdrop-blur-md" onClick={(e) => e.stopPropagation()}>
         <input
-          className="text-input"
+          className="text-input w-full border-0 border-b border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
           autoFocus
           placeholder="Go to symbol…"
           value={query}
@@ -53,20 +53,22 @@ function SymbolSearchModal({ symbols, onJump, onClose }: SymbolSearchModalProps)
           }}
           onKeyDown={handleKeyDown}
         />
-        <ul className="symbol-search-results">
+        <ul className="max-h-[50vh] overflow-y-auto p-1.5">
           {results.length === 0 ? (
-            <li className="sc-empty">No matching symbols</li>
+            <li className="sc-empty px-4 py-8 text-center text-sm text-muted-foreground">No matching symbols</li>
           ) : (
             results.map((s, i) => (
               <li
                 key={`${s.fileId}:${s.from}`}
-                className={i === highlighted ? 'symbol-result is-active' : 'symbol-result'}
+                className={`symbol-result flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  i === highlighted ? 'bg-primary/15 text-primary' : 'hover:bg-muted'
+                }`}
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => jump(s)}
               >
-                <span className="symbol-kind">{s.kind}</span>
-                <span className="symbol-name">{s.name}</span>
-                <span className="symbol-location">
+                <span className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 font-mono text-[0.65rem] text-accent">{s.kind}</span>
+                <span className="min-w-0 flex-1 truncate font-mono">{s.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
                   {s.fileName}:{s.line}
                 </span>
               </li>

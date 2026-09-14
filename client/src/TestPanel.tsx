@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useState } from 'react'
 import { runTests, type TestFileResult } from './tests'
 
@@ -27,22 +28,23 @@ function TestPanel({ room, onDebugWithAI, onClose }: TestPanelProps) {
   )
 
   return (
-    <div className="test-panel">
-      <div className="chat-panel-header">
-        <span>Tests</span>
-        <div>
-          <button type="button" className="btn btn-small btn-primary" onClick={handleRun} disabled={running}>
+    <Panel
+      title="Tests"
+      onClose={onClose}
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+      actions={
+        <>
+          <button type="button" className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" onClick={handleRun} disabled={running}>
             {running ? 'Running…' : 'Run Tests'}
           </button>
-          <button type="button" className="btn btn-small" onClick={onClose}>
-            Close
-          </button>
-        </div>
-      </div>
+        </>
+      }
+    >
       <div className="test-results">
-        {error && <div className="format-error">{error}</div>}
+        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {!error && !results && !running && (
-          <div className="sc-empty">
+          <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">
             Name a file like example.test.js and click Run Tests. Uses Node's built-in test runner
             (require('node:test')), so no framework install is needed.
           </div>
@@ -51,7 +53,7 @@ function TestPanel({ room, onDebugWithAI, onClose }: TestPanelProps) {
           <div key={fileResult.file} className="test-file-result">
             <div className="test-file-header">
               <span className="sc-diff-header">{fileResult.file}</span>
-              <span className="comment-time">
+              <span className="text-xs text-muted-foreground">
                 {fileResult.passed} passed, {fileResult.failed} failed
               </span>
             </div>
@@ -85,7 +87,7 @@ function TestPanel({ room, onDebugWithAI, onClose }: TestPanelProps) {
           </div>
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 

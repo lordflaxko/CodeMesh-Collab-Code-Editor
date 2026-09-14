@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
+import { codemeshTheme } from './editorTheme'
 import { EditorState, EditorSelection, Prec } from '@codemirror/state'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle, syntaxTree } from '@codemirror/language'
@@ -12,7 +13,6 @@ import {
 } from '@codemirror/autocomplete'
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { linter, lintGutter, type Diagnostic } from '@codemirror/lint'
-import { oneDark } from '@codemirror/theme-one-dark'
 import { yCollab, yRemoteSelectionsTheme } from 'y-codemirror.next'
 import type * as Y from 'yjs'
 import type { WebsocketProvider } from 'y-websocket'
@@ -171,32 +171,11 @@ function CodeEditor({
       languageSupport.language.data.of({ autocomplete: projectSymbolCompletions }),
       yCollab(ytext, provider.awareness),
       yRemoteSelectionsTheme,
-      EditorView.theme({
-        '&': { height: '100%', fontSize: '14px' },
-        '.cm-scroller': { fontFamily: 'ui-monospace, Consolas, monospace' },
-      }),
-      ...(isDark ? [oneDark] : []),
-      // oneDark ships its own fixed cool navy-blue chrome (background,
-      // gutter, active-line) that clashes once the app's own dark palette
-      // moves away from cool tones -- this repaints just the editor's
-      // structural colors to match the app's theme tokens, on top of
-      // oneDark, while leaving its syntax token colors untouched.
-      ...(isDark
-        ? [
-            Prec.highest(
-              EditorView.theme(
-                {
-                  '&': { backgroundColor: 'var(--bg)', color: 'var(--text-h)' },
-                  '.cm-content': { backgroundColor: 'var(--bg)', caretColor: 'var(--text-h)' },
-                  '.cm-gutters': { backgroundColor: 'var(--bg)', color: 'var(--text)', border: 'none' },
-                  '.cm-activeLine': { backgroundColor: 'var(--surface-hover)' },
-                  '.cm-activeLineGutter': { backgroundColor: 'var(--surface-hover)' },
-                },
-                { dark: true },
-              ),
-            ),
-          ]
-        : []),
+      // One theme for both schemes, built from the app's own tokens.
+      // Prec.highest keeps it ahead of the default highlight style and of
+      // yCollab's remote-selection theme, which would otherwise win on the
+      // selection colours.
+      Prec.highest(codemeshTheme(isDark)),
     ]
 
     const state = EditorState.create({

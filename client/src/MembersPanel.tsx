@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useCallback, useEffect, useState } from 'react'
 import {
   createInviteLink,
@@ -20,6 +21,17 @@ interface MembersPanelProps {
   onProjectDeleted: () => void
   onProjectUpdated: (project: Project) => void
 }
+
+// Selects deliberately omit the `text-input` hook: the suite scopes queries
+// like `.invite-section .text-input` to a single field, and putting the hook on
+// a neighbouring <select> makes that selector match two elements and fail
+// Playwright's strict mode.
+const SELECT =
+  'w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-primary'
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
 
 function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProjectUpdated }: MembersPanelProps) {
   const [error, setError] = useState<string | null>(null)
@@ -84,25 +96,24 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
   }
 
   return (
-    <div className="members-panel">
-      <div className="chat-panel-header">
-        <span>Members</span>
-        <div>
-          <button type="button" className="btn btn-small" onClick={refreshMembers}>
-            Refresh
-          </button>
-          <button type="button" className="btn btn-small" onClick={onClose}>
-            Close
-          </button>
-        </div>
-      </div>
-      {error && <div className="format-error">{error}</div>}
-      <ul className="members-list">
+    <Panel
+      title="Members"
+      onClose={onClose}
+      bodyClassName="space-y-3 p-3"
+      className="mb-4"
+      actions={
+        <button type="button" className={BTN} onClick={refreshMembers}>
+          Refresh
+        </button>
+      }
+    >
+      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+      <ul className="space-y-1">
         {Object.entries(members).map(([name, r]) => (
-          <li key={name} className="member-item">
-            <span>{name}</span>
+          <li key={name} className="member-item flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60">
+            <span className="min-w-0 flex-1 truncate">{name}</span>
             {isAdmin && name !== project.ownerUsername ? (
-              <select value={r} onChange={(e) => handleRoleChange(name, e.target.value as Role)}>
+              <select className={SELECT} value={r} onChange={(e) => handleRoleChange(name, e.target.value as Role)}>
                 <option value="viewer">viewer</option>
                 <option value="editor">editor</option>
                 <option value="admin">admin</option>
@@ -111,12 +122,12 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
               <span className="role-badge">{r}</span>
             )}
             {isAdmin && name !== project.ownerUsername && (
-              <button type="button" className="btn btn-small" onClick={() => handleRemove(name)}>
+              <button type="button" className={BTN} onClick={() => handleRemove(name)}>
                 Remove
               </button>
             )}
             {isOwner && name !== project.ownerUsername && (
-              <button type="button" className="btn btn-small" onClick={() => handleTransfer(name)}>
+              <button type="button" className={BTN} onClick={() => handleTransfer(name)}>
                 Make owner
               </button>
             )}
@@ -125,18 +136,18 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
       </ul>
 
       {isAdmin && (
-        <div className="invite-section">
-          <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)}>
+        <div className="invite-section space-y-2 border-t border-border pt-3">
+          <select className={SELECT} value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)}>
             <option value="viewer">Viewer</option>
             <option value="editor">Editor</option>
             <option value="admin">Admin</option>
           </select>
-          <button type="button" className="btn btn-small" onClick={handleGenerateInvite}>
+          <button type="button" className={BTN} onClick={handleGenerateInvite}>
             Generate invite link
           </button>
           {inviteLink && (
             <input
-              className="text-input"
+              className={FIELD}
               readOnly
               value={inviteLink}
               onFocus={(e) => e.target.select()}
@@ -146,18 +157,18 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
       )}
 
       {isAdmin && (
-        <div className="visibility-section">
-          <span className="comment-time">Visibility:</span>
+        <div className="flex items-center gap-2 border-t border-border pt-3">
+          <span className="text-xs text-muted-foreground">Visibility:</span>
           <button
             type="button"
-            className={`btn btn-small${project.visibility === 'private' ? ' sc-tab-active' : ''}`}
+            className={`${BTN} ${project.visibility === 'private' ? 'border-primary/50 bg-primary/15 text-primary' : ''}`}
             onClick={() => handleVisibility('private')}
           >
             Private
           </button>
           <button
             type="button"
-            className={`btn btn-small${project.visibility === 'public' ? ' sc-tab-active' : ''}`}
+            className={`${BTN} ${project.visibility === 'public' ? 'border-primary/50 bg-primary/15 text-primary' : ''}`}
             onClick={() => handleVisibility('public')}
           >
             Public
@@ -170,7 +181,7 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
           Delete project
         </button>
       )}
-    </div>
+    </Panel>
   )
 }
 

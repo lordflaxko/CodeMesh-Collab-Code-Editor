@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useCallback, useEffect, useState } from 'react'
 import {
   fetchGitStatus,
@@ -37,7 +38,7 @@ function diffLineClass(line: string): string {
 }
 
 function DiffView({ diff }: { diff: GitDiff | null }) {
-  if (!diff) return <div className="sc-loading">Loading diff…</div>
+  if (!diff) return <div className="sc-loading px-2 py-6 text-center text-sm text-muted-foreground">Loading diff…</div>
   const lines = diff.isNewFile ? diff.diff.split('\n').map((l) => `+${l}`) : diff.diff.split('\n')
   return (
     <pre className="sc-diff">
@@ -49,6 +50,24 @@ function DiffView({ diff }: { diff: GitDiff | null }) {
     </pre>
   )
 }
+
+// Local control styling. The sc-* class names that remain below are kept purely
+// as hooks the end-to-end suite selects on -- their rules have been removed from
+// App.css and all appearance now comes from the utilities alongside them.
+// Selects deliberately omit the `text-input` hook: the suite scopes queries
+// like `.invite-section .text-input` to a single field, and putting the hook on
+// a neighbouring <select> makes that selector match two elements and fail
+// Playwright's strict mode.
+const SELECT =
+  'w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-primary'
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
+const BTN_PRIMARY =
+  'inline-flex shrink-0 items-center rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50'
+const TAB = 'rounded-md px-2.5 py-1 text-xs transition-colors hover:text-primary'
+const SECTION_CARD = 'rounded-md border border-border bg-muted/30 p-2.5'
 
 function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceControlPanelProps) {
   const [tab, setTab] = useState<Tab>('changes')
@@ -249,16 +268,18 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
     : []
 
   return (
-    <div className="source-control-panel">
-      <div className="chat-panel-header">
-        <span>Source Control</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="sc-branch-bar">
+    <Panel
+      title="Source Control"
+      onClose={onClose}
+      // h-fit: the workspace row is items-stretch, so without it the panel
+      // stretches to the editor's full height and its controls float in a tall
+      // empty box. The original .source-control-panel rule had the same.
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="sc-branch-bar flex items-center gap-2">
         <select
-          className="sc-branch-select"
+          className={`sc-branch-select min-w-0 flex-1 ${SELECT}`}
           value={branches?.current ?? ''}
           disabled={!canEdit}
           onChange={(e) => handleSwitchBranch(e.target.value)}
@@ -272,35 +293,35 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
         {canEdit && (
           <>
             <input
-              className="text-input sc-branch-input"
+              className={`sc-branch-input min-w-0 flex-1 ${FIELD}`}
               value={newBranchName}
               onChange={(e) => setNewBranchName(e.target.value)}
               placeholder="New branch name"
             />
-            <button type="button" className="btn btn-small" onClick={handleCreateBranch}>
+            <button type="button" className={BTN} onClick={handleCreateBranch}>
               Create
             </button>
           </>
         )}
       </div>
-      <div className="sc-tabs">
+      <div className="flex items-center gap-1 border-b border-border pb-2">
         <button
           type="button"
-          className={`sc-tab${tab === 'changes' ? ' sc-tab-active' : ''}`}
+          className={`${TAB} ${tab === 'changes' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}
           onClick={() => setTab('changes')}
         >
           Changes
         </button>
         <button
           type="button"
-          className={`sc-tab${tab === 'history' ? ' sc-tab-active' : ''}`}
+          className={`${TAB} ${tab === 'history' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}
           onClick={() => setTab('history')}
         >
           History
         </button>
         <button
           type="button"
-          className={`sc-tab${tab === 'remote' ? ' sc-tab-active' : ''}`}
+          className={`${TAB} ${tab === 'remote' ? 'bg-primary/15 text-primary' : 'text-muted-foreground'}`}
           onClick={() => setTab('remote')}
         >
           Remote
@@ -308,45 +329,45 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
         {tab !== 'remote' && (
           <button
             type="button"
-            className="btn btn-small sc-refresh"
+            className={`ml-auto ${BTN}`}
             onClick={tab === 'changes' ? refreshStatus : refreshLog}
           >
             Refresh
           </button>
         )}
       </div>
-      {error && <div className="format-error">{error}</div>}
-      {loading && tab !== 'remote' && <div className="sc-loading">Loading…</div>}
+      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+      {loading && tab !== 'remote' && <div className="sc-loading px-2 py-6 text-center text-sm text-muted-foreground">Loading…</div>}
       {tab === 'changes' && !loading && (
         <>
-          <div className="sc-file-list">
+          <div className="space-y-1">
             {changedFiles.length === 0 ? (
-              <div className="sc-empty">No changes</div>
+              <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No changes</div>
             ) : (
               changedFiles.map(({ path, kind }) => (
                 <button
                   key={path}
                   type="button"
-                  className={`sc-file-item${selectedFile === path ? ' sc-file-item-active' : ''}`}
+                  className={`sc-file-item flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${selectedFile === path ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}
                   onClick={() => viewDiff(path)}
                 >
-                  <span className={`sc-file-kind sc-file-kind-${kind}`}>{kind[0].toUpperCase()}</span>
+                  <span className={`sc-file-kind-${kind} grid h-[1.1rem] w-[1.1rem] shrink-0 place-items-center rounded-sm text-[0.65rem] font-semibold ${kind === 'untracked' || kind === 'added' ? 'bg-accent/20 text-accent' : kind === 'deleted' ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}`}>{kind[0].toUpperCase()}</span>
                   {path}
                 </button>
               ))
             )}
           </div>
           {canEdit && (
-            <div className="sc-commit-box">
+            <div className={`sc-commit-box flex items-center gap-2 ${SECTION_CARD}`}>
               <input
-                className="text-input"
+                className={FIELD}
                 value={commitMessage}
                 onChange={(e) => setCommitMessage(e.target.value)}
                 placeholder="Commit message"
               />
               <button
                 type="button"
-                className="btn btn-small btn-primary"
+                className={BTN_PRIMARY}
                 onClick={handleCommit}
                 disabled={committing || !commitMessage.trim()}
               >
@@ -357,15 +378,15 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
         </>
       )}
       {tab === 'history' && !loading && (
-        <div className="sc-commit-list">
+        <div className="space-y-2">
           {commits.length === 0 ? (
-            <div className="sc-empty">No commits yet</div>
+            <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No commits yet</div>
           ) : (
             commits.map((c) => (
-              <div key={c.hash} className="sc-commit-item">
-                <div className="sc-commit-message">{c.message}</div>
-                <div className="sc-commit-meta-row">
-                  <div className="comment-time">
+              <div key={c.hash} className={`sc-commit-item ${SECTION_CARD}`}>
+                <div className="text-sm font-medium">{c.message}</div>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="text-xs text-muted-foreground">
                     {c.authorName} · {c.hash.slice(0, 7)} · {new Date(c.date).toLocaleString()}
                   </div>
                   {canEdit && (
@@ -384,71 +405,71 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
         </div>
       )}
       {tab === 'remote' && (
-        <div className="sc-remote">
+        <div className="space-y-2">
           <input
-            className="text-input"
+            className={FIELD}
             value={remoteUrl}
             onChange={(e) => setRemoteUrl(e.target.value)}
             placeholder="https://github.com/owner/repo.git"
           />
           <input
-            className="text-input"
+            className={FIELD}
             type="password"
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder="Personal access token"
           />
-          <div className="sc-remote-note">Never stored -- re-enter each time you open this panel.</div>
+          <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">Never stored -- re-enter each time you open this panel.</div>
           {canEdit && (
-            <div className="sc-remote-actions">
-              <button type="button" className="btn btn-small" onClick={handlePush} disabled={remoteBusy}>
+            <div className="flex gap-2">
+              <button type="button" className={BTN} onClick={handlePush} disabled={remoteBusy}>
                 Push
               </button>
-              <button type="button" className="btn btn-small" onClick={handlePull} disabled={remoteBusy}>
+              <button type="button" className={BTN} onClick={handlePull} disabled={remoteBusy}>
                 Pull
               </button>
             </div>
           )}
-          {remoteError && <div className="format-error">{remoteError}</div>}
-          {remoteMessage && <div className="sc-remote-message">{remoteMessage}</div>}
+          {remoteError && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{remoteError}</div>}
+          {remoteMessage && <div className="rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{remoteMessage}</div>}
 
-          <div className="sc-pr-section">
-            <div className="sc-pr-header">
+          <div className="space-y-2 border-t border-border pt-3">
+            <div className="flex items-center justify-between text-sm font-semibold">
               <span>Pull requests</span>
-              <button type="button" className="btn btn-small" onClick={refreshPullRequests} disabled={remoteBusy}>
+              <button type="button" className={BTN} onClick={refreshPullRequests} disabled={remoteBusy}>
                 Refresh
               </button>
             </div>
-            <div className="sc-pr-list">
+            <div className="space-y-1">
               {pullRequests.length === 0 ? (
-                <div className="sc-empty">No open pull requests loaded</div>
+                <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No open pull requests loaded</div>
               ) : (
                 pullRequests.map((pr) => (
-                  <a key={pr.number} className="sc-pr-item" href={pr.url} target="_blank" rel="noreferrer">
-                    #{pr.number} {pr.title} <span className="comment-time">{pr.head} → {pr.base}</span>
+                  <a key={pr.number} className="block rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted hover:text-primary" href={pr.url} target="_blank" rel="noreferrer">
+                    #{pr.number} {pr.title} <span className="text-xs text-muted-foreground">{pr.head} → {pr.base}</span>
                   </a>
                 ))
               )}
             </div>
             {canEdit && (
-              <div className="sc-pr-form">
+              <div className="space-y-2">
                 <input
-                  className="text-input"
+                  className={FIELD}
                   value={prTitle}
                   onChange={(e) => setPrTitle(e.target.value)}
                   placeholder="Pull request title"
                 />
-                <div className="sc-pr-form-row">
-                  <span className="comment-time">{branches?.current ?? '…'} →</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{branches?.current ?? '…'} →</span>
                   <input
-                    className="text-input"
+                    className={FIELD}
                     value={prBase}
                     onChange={(e) => setPrBase(e.target.value)}
                     placeholder="base branch"
                   />
                 </div>
                 <textarea
-                  className="comment-textarea"
+                  className={`${FIELD} min-h-[70px] resize-y`}
                   value={prBody}
                   onChange={(e) => setPrBody(e.target.value)}
                   placeholder="Description (optional)"
@@ -467,12 +488,12 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
         </div>
       )}
       {selectedFile && tab === 'changes' && (
-        <div className="sc-diff-viewer">
-          <div className="sc-diff-header">{selectedFile}</div>
+        <div className="mt-2 overflow-hidden rounded-md border border-border">
+          <div className="border-b border-border bg-muted/40 px-2.5 py-1.5 font-mono text-xs">{selectedFile}</div>
           <DiffView diff={diff} />
         </div>
       )}
-    </div>
+    </Panel>
   )
 }
 

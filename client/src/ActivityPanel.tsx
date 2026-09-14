@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import type * as Y from 'yjs'
 import { useActivity, type ActivityEntry } from './activity'
 
@@ -63,28 +64,27 @@ function ActivityPanel({ ydoc, onClose }: ActivityPanelProps) {
   const entries = useActivity(ydoc)
 
   return (
-    <div className="activity-panel">
-      <div className="chat-panel-header">
-        <span>Activity</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
+    <Panel
+      title="Activity"
+      onClose={onClose}
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
       <div className="activity-list">
         {entries.length === 0 ? (
-          <div className="sc-empty">No activity yet</div>
+          <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No activity yet</div>
         ) : (
           [...entries].reverse().map((entry) => (
             <div key={entry.id} className="activity-item">
               <div className="activity-text">
-                <span className="comment-author">{entry.actor}</span> {describe(entry)}
+                <span className="text-sm font-semibold">{entry.actor}</span> {describe(entry)}
               </div>
-              <div className="comment-time">{timeLabel(entry.timestamp)}</div>
+              <div className="text-xs text-muted-foreground">{timeLabel(entry.timestamp)}</div>
             </div>
           ))
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 

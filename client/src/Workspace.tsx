@@ -95,6 +95,26 @@ type OpenThread =
   | { mode: 'new'; from: number; to: number; coords: Coords }
   | { mode: 'view'; threadId: string; coords: Coords }
 
+// Workspace chrome, previously spread across .workspace-rail / .editor-wrapper /
+// .toolbar-chip rules in App.css. The 2px brand strip along the top of the rail
+// and the editor is drawn with a ::before rather than the old `background:
+// gradient top / 100% 3px` shorthand, which a Tailwind utility can't express.
+const SURFACE =
+  "relative rounded-lg border border-border bg-card/70 shadow-elegant backdrop-blur-sm " +
+  "before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[2px] before:bg-gradient-primary before:content-['']"
+
+const RAIL_BTN =
+  'grid h-[34px] w-[34px] place-items-center rounded-md transition-all duration-200 hover:-translate-y-px hover:bg-muted hover:text-primary'
+
+/** Rail toggle: brand-filled when its panel is open. */
+function railBtn(active: boolean) {
+  return `${RAIL_BTN} ${active ? 'bg-gradient-primary text-[hsl(var(--on-brand))] shadow-glow' : 'text-foreground'}`
+}
+
+const TOOLBAR_CHIP =
+  'inline-flex items-center gap-1.5 rounded-pill border border-border px-2.5 py-1 text-xs transition-all duration-200 hover:border-primary/50 hover:text-primary hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50'
+
+
 function Workspace({ room, token, user, role, isDark, onAccessRevoked }: WorkspaceProps) {
   const canEdit = atLeast(role, 'editor')
   const ydoc = useMemo(() => new Y.Doc(), [])
@@ -489,12 +509,12 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
   )
 
   return (
-    <div className="workspace">
+    <div className="relative z-[1] -m-6 flex items-stretch gap-4 overflow-x-auto p-6">
       <JoinLeaveToasts awareness={provider.awareness} />
-      <div className="workspace-rail">
+      <div className={`flex h-fit w-[46px] shrink-0 flex-col items-center gap-1.5 overflow-hidden py-2 ${SURFACE}`}>
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'source-control' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'source-control')}
           onClick={() => togglePanel('source-control')}
           title="Source Control"
           aria-label="Source Control"
@@ -503,7 +523,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         </button>
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'review' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'review')}
           onClick={() => togglePanel('review')}
           title="Review"
           aria-label="Review"
@@ -512,7 +532,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         </button>
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'activity' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'activity')}
           onClick={() => togglePanel('activity')}
           title="Activity"
           aria-label="Activity"
@@ -520,11 +540,11 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
           <ActivityIcon size={18} aria-hidden="true" />
         </button>
 
-        <span className="workspace-rail-divider" aria-hidden="true" />
+        <span className="my-0.5 h-px w-6 bg-border" aria-hidden="true" />
 
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'tests' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'tests')}
           onClick={() => togglePanel('tests')}
           title="Tests"
           aria-label="Tests"
@@ -533,7 +553,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         </button>
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'ai' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'ai')}
           onClick={() => togglePanel('ai')}
           title="AI Assistant"
           aria-label="AI Assistant"
@@ -542,7 +562,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         </button>
         <button
           type="button"
-          className={`workspace-rail-btn${activePanel === 'api-test' ? ' btn-toggle-active' : ''}`}
+          className={railBtn(activePanel === 'api-test')}
           onClick={() => togglePanel('api-test')}
           title="API Test"
           aria-label="API Test"
@@ -552,7 +572,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         {canEdit && (
           <button
             type="button"
-            className={`workspace-rail-btn${activePanel === 'database' ? ' btn-toggle-active' : ''}`}
+            className={railBtn(activePanel === 'database')}
             onClick={() => togglePanel('database')}
             title="Database"
             aria-label="Database"
@@ -563,7 +583,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         {canEdit && (
           <button
             type="button"
-            className={`workspace-rail-btn${activePanel === 'deploy' ? ' btn-toggle-active' : ''}`}
+            className={railBtn(activePanel === 'deploy')}
             onClick={() => togglePanel('deploy')}
             title="Deploy"
             aria-label="Deploy"
@@ -574,7 +594,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         {canEdit && (
           <button
             type="button"
-            className={`workspace-rail-btn${activePanel === 'debug' ? ' btn-toggle-active' : ''}`}
+            className={railBtn(activePanel === 'debug')}
             onClick={() => togglePanel('debug')}
             title="Debug"
             aria-label="Debug"
@@ -592,8 +612,8 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
         onRename={renameFile}
         onDelete={handleDelete}
       />
-      <div className="editor-wrapper">
-        <div className="editor-header">
+      <div className={`flex min-w-[360px] flex-1 flex-col overflow-hidden ${SURFACE}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
           <span className={`status status-${status}`}>
             <span className="status-dot" />
             {status === 'connected'
@@ -603,17 +623,17 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
                 : 'Disconnected'}
           </span>
           <Presence awareness={provider.awareness} />
-          <div className="editor-actions">
+          <div className="editor-actions flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="command-palette-hint"
+              className="rounded-md border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
               onClick={() => setCommandPaletteOpen(true)}
               title="Command palette"
             >
               ⌘K
             </button>
             <select
-              className="language-badge language-picker"
+              className="language-picker rounded-pill border border-border bg-muted/60 px-2 py-0.5 font-mono text-xs outline-none transition-colors focus:border-primary disabled:opacity-60"
               value={activeLanguage.id}
               disabled={!activeId || !canEdit}
               onChange={(e) => activeId && setFileLanguage(activeId, e.target.value)}
@@ -628,7 +648,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
             {canFormat(activeLanguage) && canEdit && (
               <button
                 type="button"
-                className="btn btn-small toolbar-chip"
+                className={TOOLBAR_CHIP}
                 onClick={handleFormat}
                 disabled={formatting || !ytext}
               >
@@ -638,7 +658,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
             )}
             <button
               type="button"
-              className="btn btn-small toolbar-chip"
+              className={TOOLBAR_CHIP}
               onClick={handleAddComment}
               disabled={!ytext}
             >
@@ -647,7 +667,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
             </button>
             <button
               type="button"
-              className="btn btn-small toolbar-chip"
+              className={TOOLBAR_CHIP}
               onClick={handleExplain}
               disabled={!ytext}
             >
@@ -656,7 +676,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
             </button>
             <button
               type="button"
-              className="btn btn-small toolbar-chip"
+              className={TOOLBAR_CHIP}
               onClick={() => setSymbolSearchOpen(true)}
             >
               <Target size={14} className="toolbar-chip-icon" aria-hidden="true" />
@@ -664,7 +684,7 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
             </button>
             <button
               type="button"
-              className="btn btn-small toolbar-chip"
+              className={TOOLBAR_CHIP}
               onClick={() => setTextSearchOpen(true)}
             >
               <Search size={14} className="toolbar-chip-icon" aria-hidden="true" />
@@ -673,10 +693,10 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
 
             {canEdit && (
               <>
-                <span className="toolbar-divider" aria-hidden="true" />
+                <span className="mx-0.5 h-4 w-px bg-border" aria-hidden="true" />
                 <button
                   type="button"
-                  className="btn btn-small toolbar-chip"
+                  className={TOOLBAR_CHIP}
                   onClick={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect()
                     setSaveTemplateCoords({ top: rect.top, left: rect.left, bottom: rect.bottom })

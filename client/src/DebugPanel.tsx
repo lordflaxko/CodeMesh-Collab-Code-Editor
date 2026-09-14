@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useEffect, useRef, useState } from 'react'
 import type { ResolvedBreakpoint } from './logpoints'
 import { WS_SERVER_URL } from './api'
@@ -32,6 +33,9 @@ const FORBIDDEN_CODE = 4003
 // has no debug protocol at all. Real pause/step/inspect, but a genuinely
 // bigger security surface than Run -- the server only accepts this
 // connection for a signed-in editor on a private project.
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
+
 function DebugPanel({ room, sessionToken, languageId, getCode, breakpoints, onClose }: DebugPanelProps) {
   const [status, setStatus] = useState<Status>('idle')
   const [output, setOutput] = useState<OutputSegment[]>([])
@@ -129,31 +133,30 @@ function DebugPanel({ room, sessionToken, languageId, getCode, breakpoints, onCl
   const active = status === 'running' || status === 'paused' || status === 'connecting'
 
   return (
-    <div className="debug-panel">
-      <div className="chat-panel-header">
-        <span>Debug</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="debug-panel-body">
+    <Panel
+      title="Debug"
+      onClose={onClose}
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="space-y-3">
         {wrongLanguage ? (
-          <div className="sc-empty">Real debugging only supports JavaScript files right now.</div>
+          <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">Real debugging only supports JavaScript files right now.</div>
         ) : (
           <>
             <div className="debug-panel-controls">
               {!active ? (
-                <button type="button" className="btn btn-small" onClick={handleStart}>
+                <button type="button" className={BTN} onClick={handleStart}>
                   <PlayIcon />
                   Start Debugging
                 </button>
               ) : (
                 <>
-                  <button type="button" className="btn btn-small" onClick={handleResume} disabled={!paused}>
+                  <button type="button" className={BTN} onClick={handleResume} disabled={!paused}>
                     <PlayIcon />
                     Resume
                   </button>
-                  <button type="button" className="btn btn-small" onClick={handleStepOver} disabled={!paused}>
+                  <button type="button" className={BTN} onClick={handleStepOver} disabled={!paused}>
                     ⤵ Step Over
                   </button>
                   <button type="button" className="btn btn-small btn-stop" onClick={handleStop}>
@@ -169,12 +172,12 @@ function DebugPanel({ room, sessionToken, languageId, getCode, breakpoints, onCl
               {status === 'exited' && 'Exited'}
               {status === 'idle' && 'Not started'}
             </div>
-            {error && <div className="format-error">{error}</div>}
+            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
             {paused && (
               <div className="debug-variables">
                 <div className="debug-hits-label">Variables</div>
                 {variables.length === 0 ? (
-                  <div className="sc-empty">No local variables in scope</div>
+                  <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No local variables in scope</div>
                 ) : (
                   variables.map((v) => (
                     <div key={v.name} className="debug-var-item">
@@ -197,7 +200,7 @@ function DebugPanel({ room, sessionToken, languageId, getCode, breakpoints, onCl
           </>
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 

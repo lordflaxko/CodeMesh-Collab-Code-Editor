@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useState } from 'react'
 
 interface ApiHeaderRow {
@@ -41,6 +42,11 @@ interface APITestPanelProps {
 // a private scratch pad that resets when the panel closes or the page
 // reloads, so a response body (which can contain tokens or other secrets)
 // never ends up broadcast to teammates or written to disk.
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+const BTN =
+  'inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50'
+
 function APITestPanel({ onClose }: APITestPanelProps) {
   const [method, setMethod] = useState('GET')
   const [url, setUrl] = useState('')
@@ -98,14 +104,13 @@ function APITestPanel({ onClose }: APITestPanelProps) {
     response?.headers.find(([k]) => k.toLowerCase() === 'content-type')?.[1] ?? null
 
   return (
-    <div className="api-test-panel">
-      <div className="chat-panel-header">
-        <span>API Test</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="api-test-body">
+    <Panel
+      title="API Test"
+      onClose={onClose}
+      className="api-test-panel h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="space-y-3">
         <div className="api-test-request-row">
           <select
             className="api-method-select"
@@ -133,23 +138,23 @@ function APITestPanel({ onClose }: APITestPanelProps) {
           {headers.map((h) => (
             <div key={h.id} className="api-header-row">
               <input
-                className="text-input"
+                className={FIELD}
                 value={h.key}
                 onChange={(e) => updateHeader(h.id, 'key', e.target.value)}
                 placeholder="Header"
               />
               <input
-                className="text-input"
+                className={FIELD}
                 value={h.value}
                 onChange={(e) => updateHeader(h.id, 'value', e.target.value)}
                 placeholder="Value"
               />
-              <button type="button" className="btn btn-small" onClick={() => removeHeader(h.id)}>
+              <button type="button" className={BTN} onClick={() => removeHeader(h.id)}>
                 ×
               </button>
             </div>
           ))}
-          <button type="button" className="btn btn-small" onClick={addHeader}>
+          <button type="button" className={BTN} onClick={addHeader}>
             + Header
           </button>
         </div>
@@ -161,10 +166,10 @@ function APITestPanel({ onClose }: APITestPanelProps) {
             placeholder="Request body (raw text or JSON)"
           />
         )}
-        <button type="button" className="btn btn-small btn-primary" onClick={handleSend} disabled={sending || !url.trim()}>
+        <button type="button" className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" onClick={handleSend} disabled={sending || !url.trim()}>
           {sending ? 'Sending…' : 'Send'}
         </button>
-        {error && <div className="format-error">{error}</div>}
+        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {response && (
           <div className="api-response">
             <div
@@ -186,7 +191,7 @@ function APITestPanel({ onClose }: APITestPanelProps) {
           </div>
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 

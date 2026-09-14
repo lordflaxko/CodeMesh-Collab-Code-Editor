@@ -29,19 +29,19 @@ function SaveTemplatePopover({ coords, room, sessionToken, onClose }: SaveTempla
   }
 
   return (
-    <div className="comment-popover save-template-popover" style={style}>
-      <div className="comment-popover-header">
+    <div className="save-template-popover z-50 w-[280px] space-y-2 rounded-lg border border-border bg-card/95 p-3 shadow-elegant backdrop-blur-md" style={style}>
+      <div className="text-sm font-semibold">
         <span>Save as Template</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
+        <button type="button" className="rounded-md border border-border px-2.5 py-1 text-xs transition-colors hover:border-primary/50 hover:text-primary" onClick={onClose}>
           Close
         </button>
       </div>
       {saved ? (
-        <div className="sc-empty">Saved -- it'll show up in the template list on the dashboard.</div>
+        <div className="sc-empty px-4 py-8 text-center text-sm text-muted-foreground">Saved -- it'll show up in the template list on the dashboard.</div>
       ) : (
         <>
           <input
-            className="text-input"
+            className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Template name"
@@ -50,11 +50,11 @@ function SaveTemplatePopover({ coords, room, sessionToken, onClose }: SaveTempla
               if (e.key === 'Enter') handleSave()
             }}
           />
-          {error && <div className="format-error">{error}</div>}
-          <div className="comment-popover-actions">
+          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+          <div className="flex items-center justify-end gap-1.5">
             <button
               type="button"
-              className="btn btn-small"
+              className="rounded-md border border-border px-2.5 py-1 text-xs transition-colors hover:border-primary/50 hover:text-primary"
               onClick={handleSave}
               disabled={saving || !name.trim()}
             >

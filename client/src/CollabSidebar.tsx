@@ -20,14 +20,14 @@ function CollabSidebar({ awareness, ydoc, user, room, participants }: CollabSide
   const users = usePresence(awareness)
 
   return (
-    <div className="collab-sidebar">
-      <div className="collab-sidebar-collaborators">
-        <div className="collab-sidebar-header">Collaborators</div>
-        <ul className="collab-sidebar-list">
+    <div className="relative h-fit w-[220px] shrink-0 overflow-hidden rounded-lg border border-border bg-card/70 shadow-elegant backdrop-blur-sm before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-gradient-primary before:content-['']">
+      <div className="space-y-1">
+        <div className="border-b border-border px-3.5 py-2.5 text-sm font-semibold">Collaborators</div>
+        <ul className="space-y-1 p-2">
           {users.map((u) => (
-            <li key={u.clientId} className="collab-sidebar-user">
+            <li key={u.clientId} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
               <span
-                className="collab-sidebar-avatar"
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-[hsl(var(--on-brand))]"
                 style={{ '--chip-color': u.color } as CSSProperties}
               >
                 {u.name.slice(0, 1).toUpperCase()}

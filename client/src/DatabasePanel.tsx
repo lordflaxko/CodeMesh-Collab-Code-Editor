@@ -1,3 +1,4 @@
+import { Panel } from './components/Panel'
 import { useState } from 'react'
 import { runDatabaseQuery, type DbQueryResult } from './database'
 
@@ -15,6 +16,9 @@ interface DatabasePanelProps {
 // server itself connects outbound on your behalf, which is why this needs
 // editor access on a private project (enforced server-side regardless of
 // what this panel does or doesn't show).
+const FIELD =
+  'text-input w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary'
+
 function DatabasePanel({ room, sessionToken, onClose }: DatabasePanelProps) {
   const [connectionString, setConnectionString] = useState('')
   const [query, setQuery] = useState('')
@@ -34,22 +38,21 @@ function DatabasePanel({ room, sessionToken, onClose }: DatabasePanelProps) {
   }
 
   return (
-    <div className="database-panel">
-      <div className="chat-panel-header">
-        <span>Database</span>
-        <button type="button" className="btn btn-small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="database-panel-body">
+    <Panel
+      title="Database"
+      onClose={onClose}
+      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      bodyClassName="space-y-3 p-3"
+    >
+      <div className="space-y-3">
         <input
-          className="text-input"
+          className={FIELD}
           type="password"
           value={connectionString}
           onChange={(e) => setConnectionString(e.target.value)}
           placeholder="postgres://user:password@host:5432/dbname"
         />
-        <div className="sc-remote-note">Never stored -- re-enter each time you open this panel.</div>
+        <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">Never stored -- re-enter each time you open this panel.</div>
         <textarea
           className="comment-textarea database-query-input"
           value={query}
@@ -58,22 +61,22 @@ function DatabasePanel({ room, sessionToken, onClose }: DatabasePanelProps) {
         />
         <button
           type="button"
-          className="btn btn-small btn-primary"
+          className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={handleRun}
           disabled={running || !connectionString.trim() || !query.trim()}
         >
           {running ? 'Running…' : 'Run Query (read-only)'}
         </button>
-        {error && <div className="format-error">{error}</div>}
+        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {result && (
           <div className="database-results">
             {result.truncated && (
-              <div className="sc-remote-note">
+              <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
                 Showing first {result.rows.length} of {result.rowCount} rows.
               </div>
             )}
             {result.rows.length === 0 ? (
-              <div className="sc-empty">No rows returned</div>
+              <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">No rows returned</div>
             ) : (
               <div className="database-table-wrap">
                 <table className="database-table">
@@ -99,7 +102,7 @@ function DatabasePanel({ room, sessionToken, onClose }: DatabasePanelProps) {
           </div>
         )}
       </div>
-    </div>
+    </Panel>
   )
 }
 
