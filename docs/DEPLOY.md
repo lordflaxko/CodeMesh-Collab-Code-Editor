@@ -227,6 +227,14 @@ npx wrangler pages project create codemesh --production-branch master --force
 npx wrangler pages deploy client/dist --project-name codemesh
 ```
 
+Run that from a directory with **no Workers config in scope**. Recent wrangler
+delegates `pages deploy` to Workers, and when it finds a `wrangler.jsonc` it
+takes the target from that file's `name` and `assets.directory` and silently
+ignores both the directory argument and `--project-name` above — so the deploy
+lands on a Worker of a different name and `codemesh.pages.dev` never changes.
+The repository used to carry such a file from an abandoned Workers attempt; it
+has been removed for exactly this reason.
+
 That `--force` is load-bearing and worth explaining. Cloudflare has folded
 Pages into Workers, so without it `pages project create` silently produces a
 **Worker** instead, hosted at `<project>.<account-subdomain>.workers.dev` —
@@ -240,16 +248,44 @@ afternoon to:
 | | SPA fallback |
 | --- | --- |
 | Pages, Netlify | `_redirects` containing `/*  /index.html  200` |
-| Workers assets | `not_found_handling: "single-page-application"` in `wrangler.jsonc` |
+| Workers assets | `not_found_handling: "single-page-application"` in a `wrangler.jsonc` |
 
 They are not interchangeable. Workers applies a stricter validator and
 **rejects** that `_redirects` rule outright as an infinite loop — `/index.html`
-matches `/*` again — failing the deploy after an otherwise clean build. Both
-files are kept in the repo because each is correct for its own target.
+matches `/*` again — failing the deploy after an otherwise clean build. Only
+`_redirects` is kept in the repo, since the live client is served by Pages; the
+Workers form is recorded here for anyone who retargets it.
 
 Whatever the host, the SPA fallback is mandatory: the client routes on real
 paths, so without it every direct link, refresh and shared project URL
 returns 404 and only `/` loads.
+
+### Automatic deploys
+
+`.github/workflows/deploy-client.yml` runs that same `pages deploy` on every
+push to `master` that touches `client/`, so the live site follows the branch
+without anyone running wrangler by hand.
+
+It is a GitHub Actions workflow rather than Cloudflare's built-in Git
+integration because `codemesh` was created as a **Direct Upload** project, and
+Cloudflare does not allow converting one: *"you cannot switch to Git
+integration later. You will have to create a new project with Git integration
+to use automatic deployments."* Switching would mean deleting the live project
+and briefly giving up the globally unique `codemesh.pages.dev` name, which is
+not worth it — the workflow reaches the same project over the API instead.
+
+It needs two repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | API token with the **Cloudflare Pages → Edit** permission |
+| `CLOUDFLARE_ACCOUNT_ID` | The account ID shown in the Cloudflare dashboard URL |
+
+Create the token at **My Profile → API Tokens → Create Token**, scoped to that
+one permission — an Edit-Pages token cannot touch DNS, the server, or billing,
+so a leak from CI costs you the static site and nothing else. `VITE_SERVER_URL`
+is set in the workflow file rather than as a secret, since it is inlined into
+the bundle and therefore public regardless.
 
 Netlify works the same way and `netlify.toml` still configures it. Its free
 tier now meters builds as credits, and exhausting them pauses production

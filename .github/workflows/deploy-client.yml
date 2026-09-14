@@ -1,0 +1,70 @@
+# Deploys the client to Cloudflare Pages on every push to master.
+#
+# Why this exists instead of Cloudflare's own Git integration: the `codemesh`
+# Pages project was created as a Direct Upload project, and Cloudflare does not
+# allow converting one to Git integration -- "you cannot switch to Git
+# integration later. You will have to create a new project". Recreating it
+# would mean deleting the live project and briefly releasing the globally
+# unique `codemesh.pages.dev` name. This workflow gets the same
+# push-to-deploy behaviour while leaving the live project alone.
+name: Deploy client to Cloudflare Pages
+
+on:
+  push:
+    branches: [master]
+    # The server deploys separately (systemd on its own host), so server-only
+    # commits have no effect on the built client and shouldn't burn a deploy.
+    paths:
+      - 'client/**'
+      - '.github/workflows/deploy-client.yml'
+  # Lets you redeploy from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+# A newer push should win rather than race an in-flight deploy to the same
+# project, but let a running one finish so a half-uploaded build never wins.
+concurrency:
+  group: deploy-client
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build
+        working-directory: client
+        env:
+          # Inlined into the bundle at build time -- it is not a secret, it is
+          # a public hostname that ends up readable in the shipped JavaScript
+          # either way. Keeping it literal here means a wrong value is visible
+          # in review rather than hidden in repository settings. Omitting it
+          # is the real hazard: the default is http://localhost:1234, which
+          # builds cleanly and then fails for every visitor.
+          VITE_SERVER_URL: https://codemesh.duckdns.org
+        run: npm run build
+
+      - name: Deploy to Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Pinned deliberately. `pages deploy` changed behaviour between
+          # versions -- newer wrangler delegates to Workers and, when a Workers
+          # config file is in scope, silently ignores the directory and
+          # --project-name given here. An unpinned action would reintroduce
+          # that class of failure without any change to this repository.
+          wranglerVersion: '4.131.1'
+          command: pages deploy client/dist --project-name=codemesh --branch=master

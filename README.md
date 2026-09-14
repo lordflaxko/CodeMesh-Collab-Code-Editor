@@ -256,8 +256,13 @@ time — so it must be set before building, and changing it means rebuilding:
 cd client && VITE_SERVER_URL=https://your-hostname.example.com npm run build
 ```
 
-`netlify.toml` in the repo root configures Netlify for this; set
-`VITE_SERVER_URL` in the site's environment variables and connect the repo.
+The live client is on Cloudflare Pages, and
+`.github/workflows/deploy-client.yml` rebuilds and redeploys it on every push
+to `master` that touches `client/` — it needs the `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` repository secrets described in
+[docs/DEPLOY.md](docs/DEPLOY.md). `netlify.toml` in the repo root configures
+Netlify as an alternative; set `VITE_SERVER_URL` in the site's environment
+variables and connect the repo.
 
 ### Updating a deployment
 
