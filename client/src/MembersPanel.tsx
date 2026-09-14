@@ -107,7 +107,7 @@ function MembersPanel({ token, project, role, onClose, onProjectDeleted, onProje
         </button>
       }
     >
-      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+      {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       <ul className="space-y-1">
         {Object.entries(members).map(([name, r]) => (
           <li key={name} className="member-item flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60">

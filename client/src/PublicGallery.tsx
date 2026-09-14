@@ -39,7 +39,7 @@ function PublicGallery({ onOpenProject }: PublicGalleryProps) {
       </div>
 
       {error && (
-        <div className="mx-auto mb-6 flex max-w-md items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="format-error mx-auto mb-6 flex max-w-md items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
           {error}
         </div>

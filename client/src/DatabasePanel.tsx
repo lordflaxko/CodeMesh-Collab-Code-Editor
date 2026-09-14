@@ -67,7 +67,7 @@ function DatabasePanel({ room, sessionToken, onClose }: DatabasePanelProps) {
         >
           {running ? 'Running…' : 'Run Query (read-only)'}
         </button>
-        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+        {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {result && (
           <div className="database-results">
             {result.truncated && (

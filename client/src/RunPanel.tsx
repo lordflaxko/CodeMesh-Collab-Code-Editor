@@ -359,7 +359,7 @@ function RunPanel({
       <TerminalView ref={terminalRef} isDark={isDark} onData={handleTerminalData} />
       {(output.length > 0 || error || exitInfo) && (
         <div className="run-output border-t border-border px-3 py-2 font-mono text-xs">
-          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-destructive">{error}</div>}
+          {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-destructive">{error}</div>}
           {output.length === 0 && !error && (
             <div className="run-output-empty sr-only">(no output yet)</div>
           )}

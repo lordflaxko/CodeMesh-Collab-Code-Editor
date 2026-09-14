@@ -50,7 +50,7 @@ function SaveTemplatePopover({ coords, room, sessionToken, onClose }: SaveTempla
               if (e.key === 'Enter') handleSave()
             }}
           />
-          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+          {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
           <div className="flex items-center justify-end gap-1.5">
             <button
               type="button"

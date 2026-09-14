@@ -65,7 +65,7 @@ function DeployPanel({ room, sessionToken, getAllFiles, onClose }: DeployPanelPr
     <Panel
       title="Deploy"
       onClose={onClose}
-      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      className="deploy-panel h-fit max-h-[80vh] w-[340px] shrink-0"
       bodyClassName="space-y-3 p-3"
     >
       <div className="space-y-3">
@@ -91,7 +91,7 @@ function DeployPanel({ room, sessionToken, getAllFiles, onClose }: DeployPanelPr
             </button>
           </>
         )}
-        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+        {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       </div>
     </Panel>
   )

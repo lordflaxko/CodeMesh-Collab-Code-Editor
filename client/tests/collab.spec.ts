@@ -541,7 +541,7 @@ test('Stop halts an in-flight run and the Run button works again afterward', asy
   await page.getByRole('button', { name: 'Run' }).click()
   await expect(page.locator('.run-output')).toContainText('looping', { timeout: 15000 })
 
-  await page.getByRole('button', { name: '■ Stop' }).click()
+  await page.getByRole('button', { name: 'Stop' }).click()
   await expect(page.locator('.run-output-exit')).toContainText('Stopped')
 
   await page.locator('.cm-content').click()
@@ -1142,7 +1142,7 @@ test('real step-through debugging pauses at a breakpoint and shows live variable
   await expect(page.locator('.debug-var-item', { hasText: /^i2$/ })).toBeVisible({ timeout: 10000 })
   await expect(page.locator('.debug-var-item', { hasText: /^total1$/ })).toBeVisible()
 
-  await page.getByRole('button', { name: '■ Stop' }).click()
+  await page.getByRole('button', { name: 'Stop' }).click()
   await expect(page.locator('.debug-status')).toContainText('Exited')
 })
 

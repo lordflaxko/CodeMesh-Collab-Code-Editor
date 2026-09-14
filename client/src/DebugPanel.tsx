@@ -172,7 +172,7 @@ function DebugPanel({ room, sessionToken, languageId, getCode, breakpoints, onCl
               {status === 'exited' && 'Exited'}
               {status === 'idle' && 'Not started'}
             </div>
-            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+            {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
             {paused && (
               <div className="debug-variables">
                 <div className="debug-hits-label">Variables</div>

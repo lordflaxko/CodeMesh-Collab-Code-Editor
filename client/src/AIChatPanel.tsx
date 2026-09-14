@@ -85,7 +85,7 @@ function AIChatPanel({
         )}
         {asking && <div className="sc-loading px-2 py-6 text-center text-sm text-muted-foreground">Thinking…</div>}
       </div>
-      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+      {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       <form
         className="chat-compose"
         onSubmit={(e) => {

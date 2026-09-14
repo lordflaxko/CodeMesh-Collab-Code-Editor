@@ -55,7 +55,7 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
       {!readOnly && creating && (
         <form className="border-b border-border p-1.5" onSubmit={submitCreate}>
           <input
-            className="w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
+            className="text-input w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
             autoFocus
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
@@ -75,7 +75,7 @@ function FileTree({ files, activeId, readOnly, onSelect, onCreate, onRename, onD
             {renamingId === file.id ? (
               <form onSubmit={submitRename}>
                 <input
-                  className="w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
+                  className="text-input w-full rounded-md border border-border bg-card px-2 py-1 text-sm outline-none focus:border-primary"
                   autoFocus
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}

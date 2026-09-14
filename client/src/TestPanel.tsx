@@ -42,7 +42,7 @@ function TestPanel({ room, onDebugWithAI, onClose }: TestPanelProps) {
       }
     >
       <div className="test-results">
-        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+        {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {!error && !results && !running && (
           <div className="sc-empty px-2 py-6 text-center text-sm text-muted-foreground">
             Name a file like example.test.js and click Run Tests. Uses Node's built-in test runner

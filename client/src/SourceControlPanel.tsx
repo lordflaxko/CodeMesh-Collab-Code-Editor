@@ -274,7 +274,7 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
       // h-fit: the workspace row is items-stretch, so without it the panel
       // stretches to the editor's full height and its controls float in a tall
       // empty box. The original .source-control-panel rule had the same.
-      className="h-fit max-h-[80vh] w-[340px] shrink-0"
+      className="source-control-panel h-fit max-h-[80vh] w-[340px] shrink-0"
       bodyClassName="space-y-3 p-3"
     >
       <div className="sc-branch-bar flex items-center gap-2">
@@ -336,7 +336,7 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
           </button>
         )}
       </div>
-      {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+      {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
       {loading && tab !== 'remote' && <div className="sc-loading px-2 py-6 text-center text-sm text-muted-foreground">Loading…</div>}
       {tab === 'changes' && !loading && (
         <>
@@ -430,7 +430,7 @@ function SourceControlPanel({ room, canEdit, sessionToken, onClose }: SourceCont
               </button>
             </div>
           )}
-          {remoteError && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{remoteError}</div>}
+          {remoteError && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{remoteError}</div>}
           {remoteMessage && <div className="rounded-md border border-accent/30 bg-accent/10 p-2 text-xs text-accent">{remoteMessage}</div>}
 
           <div className="space-y-2 border-t border-border pt-3">

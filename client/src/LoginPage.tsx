@@ -123,7 +123,7 @@ function LoginPage({ initialMode, error, onLogin, onSignup, onRequestPasswordRes
           )}
 
           {error && (
-            <span className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            <span className="format-error flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertCircle aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
               {error}
             </span>

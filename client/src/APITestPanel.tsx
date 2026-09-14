@@ -169,7 +169,7 @@ function APITestPanel({ onClose }: APITestPanelProps) {
         <button type="button" className="shrink-0 rounded-md bg-gradient-primary px-3 py-1.5 text-xs font-medium text-[hsl(var(--on-brand))] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" onClick={handleSend} disabled={sending || !url.trim()}>
           {sending ? 'Sending…' : 'Send'}
         </button>
-        {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+        {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
         {response && (
           <div className="api-response">
             <div

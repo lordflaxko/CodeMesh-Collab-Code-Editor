@@ -148,7 +148,7 @@ function ReviewPanel({ ydoc, room, user, canEdit, onClose }: ReviewPanelProps) {
                     : 'Changes requested'}
               </span>
             </div>
-            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
+            {error && <div className="format-error rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">{error}</div>}
             <div className="space-y-1">
               {(changedFiles ?? []).map((f) => (
                 <button

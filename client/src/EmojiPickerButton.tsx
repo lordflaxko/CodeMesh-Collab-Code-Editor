@@ -1,4 +1,5 @@
 import { useState, type MouseEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import EmojiPicker, { Theme, type EmojiClickData } from 'emoji-picker-react'
 
 const PICKER_WIDTH = 280
@@ -75,18 +76,28 @@ function EmojiPickerButton({
       <button type="button" className={className} onClick={toggle} aria-label={label}>
         {children}
       </button>
-      {position && (
-        <div className="reaction-picker-popover" style={position}>
-          <EmojiPicker
-            onEmojiClick={handlePick}
-            onReactionClick={handlePick}
-            reactionsDefaultOpen={compact}
-            theme={resolvePickerTheme()}
-            height={PICKER_HEIGHT}
-            width={PICKER_WIDTH}
-          />
-        </div>
-      )}
+      {position &&
+        // Rendered into <body> rather than in place. The picker is
+        // position: fixed, but a fixed element is positioned against the
+        // nearest ancestor with a filter/backdrop-filter rather than the
+        // viewport -- and the panel shell uses backdrop-blur, which made the
+        // picker anchor to the panel and get clipped by its overflow-hidden
+        // instead of floating over the page. A portal puts it outside every
+        // panel's containing block, so the viewport coordinates computed above
+        // mean what they say.
+        createPortal(
+          <div className="reaction-picker-popover" style={position}>
+            <EmojiPicker
+              onEmojiClick={handlePick}
+              onReactionClick={handlePick}
+              reactionsDefaultOpen={compact}
+              theme={resolvePickerTheme()}
+              height={PICKER_HEIGHT}
+              width={PICKER_WIDTH}
+            />
+          </div>,
+          document.body,
+        )}
     </>
   )
 }

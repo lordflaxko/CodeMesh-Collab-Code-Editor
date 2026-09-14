@@ -52,7 +52,7 @@ function CommentPopover(props: CommentPopoverProps) {
       style={style}
     >
         <MentionInput
-          className={`${FIELD} min-h-[60px] resize-y`}
+          className={`comment-textarea ${FIELD} min-h-[60px] resize-y`}
           value={draft}
           onChange={setDraft}
           participants={props.participants}
@@ -60,7 +60,7 @@ function CommentPopover(props: CommentPopoverProps) {
           multiline
           autoFocus
         />
-        <div className="flex items-center gap-1.5">
+        <div className="comment-popover-actions flex items-center gap-1.5">
           <button
             type="button"
             className={BTN}
