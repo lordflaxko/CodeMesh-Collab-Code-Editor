@@ -220,7 +220,24 @@ A Playwright end-to-end suite of **72 specs** drives the real client and server 
 cd client && npx playwright test
 ```
 
-Some specs need supporting services: Piston (Run/Format/Test), Docker (Deploy/Debug), a Postgres instance seeded with a `widgets` table (Database panel), and API keys for the AI and password-reset specs. Without those, the corresponding specs fail while the rest of the suite passes.
+Some specs need supporting services: Piston (Run/Format/Test), Docker
+(Deploy/Debug), a seeded Postgres instance (Database panel), and API keys for
+the AI and password-reset specs. Without those, the corresponding specs fail
+while the rest of the suite passes.
+
+The Postgres one is a single command, because the two Database specs query a
+`widgets` table with two known rows and otherwise fail with `relation
+"widgets" does not exist`:
+
+```bash
+cd server && npm run setup-test-db
+```
+
+That creates the `codemesh_pg` container if it is missing, waits for it to
+accept connections, and seeds the table. It is safe to re-run, and it is kept
+out of Playwright's setup on purpose: it needs Docker, and most of the suite
+does not, so wiring it in would turn "Docker isn't running" into a failed run
+rather than two failed features.
 
 **Stop your dev server first.** Playwright starts the app itself and passes
 two environment variables the suite depends on — it disables rate limiting

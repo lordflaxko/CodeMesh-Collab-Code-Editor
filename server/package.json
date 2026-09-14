@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "setup-formatters": "node setup-formatters.js",
+    "setup-test-db": "node setup-test-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
