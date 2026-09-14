@@ -36,7 +36,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Wrangler 4.x requires Node >= 22 and exits immediately on anything
+          # older ("Wrangler requires at least Node.js v22.0.0"), so pinning 20
+          # here failed the deploy even with valid Cloudflare credentials.
+          node-version: '22'
           cache: npm
           cache-dependency-path: client/package-lock.json
 
