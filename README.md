@@ -4,6 +4,11 @@
 
 A real-time collaborative code editor. Several people open the same project and edit it at once — live cursors, presence, chat, and inline comment threads — with a full toolchain in the same tab: sandboxed execution with an interactive terminal, real step-through debugging, Git with pull requests, a Postgres query panel, an HTTP API tester, one-click deploys, and an AI assistant.
 
+https://github.com/lordflaxko/CodeMesh-Collab-Code-Editor/raw/master/docs/demo.mp4
+
+*Two people editing one file — live cursors and presence, a chat message
+arriving, then the code running for real in a sandbox. 30 seconds, no cuts.*
+
 ![CodeMesh landing page](docs/screenshots/landing.png)
 
 > The live instance runs on free infrastructure — a 1 GB VM for the server
@@ -53,7 +58,10 @@ A real-time collaborative code editor. Several people open the same project and 
 
 ### Workspace
 
-The activity rail on the left switches the side panel — one at a time, like an IDE sidebar. Here Source Control is open next to a run that has just finished.
+The activity rail on the left switches the side panel — one at a time, like
+an IDE sidebar. Here two people are in the room: presence chips in the editor
+header, the collaborator list and room chat on the right, and a run that has
+just finished below the editor.
 
 ![Workspace](docs/screenshots/workspace.png)
 
@@ -110,7 +118,9 @@ a deployment is protected unless someone deliberately opts out.
 ## Stack
 
 - **Client** — React 19 + TypeScript, Vite, CodeMirror 6 (via `y-codemirror.next`), and a design system of HSL CSS custom properties driving light/dark themes
-- **Styling** — Tailwind CSS v4 (as a Vite plugin; the theme still comes from `tailwind.config.ts` via `@config`) over those same custom properties, so utilities and the hand-written stylesheet read the identical tokens. The marketing and auth surfaces — landing, login/signup, explore, and the legal pages — are built from Tailwind utilities and [Watermelon UI](https://ui.watermelon.sh/) components copied into `src/components/watermelon/`; the workspace and its panels are still styled by `src/App.css`. Motion comes from `motion`, icons from `lucide-react`
+- **Styling** — Tailwind CSS v4 (as a Vite plugin; the theme comes from `tailwind.config.ts` via `@config`) over those same custom properties, so utilities and the remaining stylesheet read the identical tokens. Every surface — landing, auth, dashboard, explore, legal, and the workspace with its ten side panels — is built from Tailwind utilities and [Watermelon UI](https://ui.watermelon.sh/) components copied into `src/components/watermelon/`, with the panels sharing one `Panel` shell. `src/App.css` is down from 3,235 to ~1,500 lines and holds only what utilities cannot express. Motion comes from `motion`, icons from `lucide-react`
+- **Editor theme** — `src/editorTheme.ts` is CodeMesh's own CodeMirror theme, replacing `@codemirror/theme-one-dark`. Its colours are CSS custom properties, so one definition serves light and dark, and every syntax colour is checked against the editor background for at least 4.5:1 contrast
+- **Bundle** — the editor is code-split behind `React.lazy`, so the landing page ships ~125 kB gzipped instead of pulling in CodeMirror, xterm and the debugger
 - **Server** — Node.js, `ws` + `y-websocket`, with accounts/projects/invites/notifications in plain JSON files
 - **Sync** — Yjs CRDTs over WebSocket. Every document, chat thread, comment, and activity entry is a shared Yjs type, so the server stays a relay rather than a source of truth
 - **Execution** — a self-hosted Piston instance; the containerised features (Deploy, Install & Run, debugging) shell out to the `docker` CLI on the host
@@ -302,9 +312,13 @@ and reconnect on their own, and nothing is lost.
 ```
 client/   React app — editor, panels, routing, design system
   src/
+    components/   shared Panel shell, Reveal, watermelon/ registry components
+    editorTheme.ts  the CodeMirror theme
   tests/  Playwright end-to-end suite
 server/   WebSocket collaboration server + REST endpoints
           (accounts, projects, git, deploy, database, AI, email)
+          setup-formatters.js, setup-test-db.js
 deploy/   setup.sh, update.sh, nginx and systemd config
-docs/     DEPLOY.md and screenshots
+docs/     DEPLOY.md, demo.mp4 and screenshots
+.github/  deploy-client.yml — builds and publishes the client on push
 ```
