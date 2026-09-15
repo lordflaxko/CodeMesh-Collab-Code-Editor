@@ -4,12 +4,11 @@
 
 A real-time collaborative code editor. Several people open the same project and edit it at once — live cursors, presence, chat, and inline comment threads — with a full toolchain in the same tab: sandboxed execution with an interactive terminal, real step-through debugging, Git with pull requests, a Postgres query panel, an HTTP API tester, one-click deploys, and an AI assistant.
 
-https://github.com/lordflaxko/CodeMesh-Collab-Code-Editor/raw/master/docs/demo.mp4
-
-*Two people editing one file — live cursors and presence, a chat message
-arriving, then the code running for real in a sandbox. 30 seconds, no cuts.*
-
 ![CodeMesh landing page](docs/screenshots/landing.png)
+
+**[▶ Watch the 30-second demo](docs/demo.mp4)** — two people editing one file:
+live cursors and presence, a chat message arriving, then the code running for
+real in a sandbox. No cuts, no mock data.
 
 > The live instance runs on free infrastructure — a 1 GB VM for the server
 > and Piston, with the client on a CDN. It's sized for a demo rather than a
