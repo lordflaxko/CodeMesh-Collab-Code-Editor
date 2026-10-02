@@ -46,20 +46,22 @@ const MAX_ATTEMPTS = 3
 /**
  * Decides what to do with a failed response.
  *
- *   'permanent'  -- give up now (bad key, bad request, exhausted quota)
+ *   'permanent'  -- give up now (bad key, bad request)
  *   'model'      -- this model is struggling; retry it, then try the next one
- *   'rate'       -- we are being rate limited; retry, but do NOT try other
- *                   models, because the limit is per project, not per model
+ *   'rate'       -- rate limited; retry this model, then try the next one
+ *   'quota'      -- this model's allowance is spent; do NOT retry it, but DO
+ *                   move straight to the next model
  *
- * The quota case matters: a 429 for exhausted quota is not transient at all,
- * and fanning it out across three models turns one rejected request into nine,
- * burning the remaining allowance to arrive at the same answer. Google words
- * the two cases differently, which is the only signal available.
+ * The quota case is worth separating. Google's free tier meters
+ * GenerateRequestsPerDayPerProjectPerModel -- 20 a day, counted per model --
+ * so retrying the same model is certain to fail while switching to another one
+ * draws on a fresh allowance. Retrying regardless would spend three requests
+ * to learn what the first already said.
  */
 function classifyFailure(status, message) {
   if (!TRANSIENT_STATUSES.has(status)) return 'permanent'
   if (status !== 429) return 'model'
-  return /quota|billing|exceeded your current/i.test(message || '') ? 'permanent' : 'rate'
+  return /quota|billing|exceeded your current/i.test(message || '') ? 'quota' : 'rate'
 }
 
 /** Turns a raw provider error into something a user can act on. */
@@ -137,7 +139,8 @@ async function tryModel(apiKey, model, body) {
     // delays the same answer.
     const kind = classifyFailure(response.status, lastMessage)
     if (kind === 'permanent') throw new Error(userFacing(response.status, lastMessage))
-    if (attempt === MAX_ATTEMPTS) return { transient: lastMessage, sameModelOnly: kind === 'rate' }
+    if (kind === 'quota') return { transient: userFacing(response.status, lastMessage) }
+    if (attempt === MAX_ATTEMPTS) return { transient: lastMessage }
     await sleep(backoffMs(attempt))
   }
 
@@ -175,7 +178,9 @@ async function tryModelStream(apiKey, model, body, onChunk) {
       lastMessage = data.error?.message || `AI request failed (${response.status})`
       const kind = classifyFailure(response.status, lastMessage)
       if (kind === 'permanent') throw new Error(userFacing(response.status, lastMessage))
-      if (attempt === MAX_ATTEMPTS) return { transient: lastMessage, sameModelOnly: kind === 'rate' }
+      // Spent allowance: no point asking this model again.
+      if (kind === 'quota') return { transient: userFacing(response.status, lastMessage) }
+      if (attempt === MAX_ATTEMPTS) return { transient: lastMessage }
       await sleep(backoffMs(attempt))
       continue
     }
@@ -240,9 +245,6 @@ async function callGeminiStream(apiKey, systemPrompt, messages, onChunk) {
     const result = await tryModelStream(apiKey, model, body, onChunk)
     if (result.text !== undefined) return result.text
     lastMessage = result.transient
-    // A rate limit applies to the project, not to this model, so trying the
-    // next one only spends more of the same allowance.
-    if (result.sameModelOnly) break
   }
   throw new Error(lastMessage)
 }
@@ -258,9 +260,6 @@ async function callGemini(apiKey, systemPrompt, messages) {
     const result = await tryModel(apiKey, model, body)
     if (result.text !== undefined) return result.text
     lastMessage = result.transient
-    // A rate limit applies to the project, not to this model, so trying the
-    // next one only spends more of the same allowance.
-    if (result.sameModelOnly) break
   }
 
   // Every model was unreachable or overloaded. Surface the last provider
