@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import * as Y from 'yjs'
+import { ConnectionTrouble } from './components/ConnectionTrouble'
 import { WebsocketProvider } from 'y-websocket'
 import {
   Wand2,
@@ -123,6 +124,9 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
     [room, ydoc, token],
   )
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
+  // Set once the connection has been failing long enough that it is worth
+  // explaining rather than leaving the user watching "Connecting…".
+  const [stalled, setStalled] = useState(false)
   const [synced, setSynced] = useState(false)
   const { files, createFile, renameFile, deleteFile, setFileLanguage, ensureDefaultFile } =
     useFileTree(ydoc, user.name)
@@ -163,6 +167,26 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
   useEffect(() => {
     provider.awareness.setLocalStateField('user', user)
   }, [provider, user])
+
+  // Keyed on the boolean, not the status string: y-websocket flaps between
+  // 'connecting' and 'disconnected' while it retries, and keying on the raw
+  // status would restart this timer on every flap so it never fired.
+  const isConnected = status === 'connected'
+  useEffect(() => {
+    if (isConnected) {
+      setStalled(false)
+      return
+    }
+    const timer = setTimeout(() => setStalled(true), 8000)
+    return () => clearTimeout(timer)
+  }, [isConnected])
+
+  const retryConnection = useCallback(() => {
+    setStalled(false)
+    provider.disconnect()
+    provider.connect()
+  }, [provider])
+
 
   useEffect(() => {
     const onStatus = ({ status }: { status: 'connecting' | 'connected' | 'disconnected' }) => {
@@ -509,7 +533,9 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
   )
 
   return (
-    <div className="relative z-[1] -m-6 flex items-stretch gap-4 overflow-x-auto p-6">
+    <>
+      {stalled && <ConnectionTrouble onRetry={retryConnection} />}
+      <div className="relative z-[1] -m-6 flex items-stretch gap-4 overflow-x-auto p-6">
       <JoinLeaveToasts awareness={provider.awareness} />
       <div className={`flex h-fit w-[46px] shrink-0 flex-col items-center gap-1.5 overflow-hidden py-2 ${SURFACE}`}>
         <button
@@ -869,7 +895,8 @@ function Workspace({ room, token, user, role, isDark, onAccessRevoked }: Workspa
       {commandPaletteOpen && (
         <CommandPalette commands={commands} onClose={() => setCommandPaletteOpen(false)} />
       )}
-    </div>
+      </div>
+    </>
   )
 }
 
