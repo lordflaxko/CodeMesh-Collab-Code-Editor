@@ -1,8 +1,24 @@
 const crypto = require('crypto')
 const { getLoadedLiveDoc } = require('./yjsDoc')
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash'
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`
+// A single pinned model is a single point of failure: individual Gemini models
+// get saturated independently, and when one does it returns 503 for minutes at
+// a time while its neighbours answer fine. Measured during one such spike:
+// gemini-3.8-flash failed 4 of 4 requests while gemini-3.5-flash served 4 of 4.
+// So the primary is tried first and the rest are fallbacks, each overridable by
+// env so a future outage is a config change rather than a deploy.
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash'
+const FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || 'gemini-flash-latest,gemini-3.8-flash')
+  .split(',')
+  .map((name) => name.trim())
+  .filter(Boolean)
+// Deduped so an explicit GEMINI_MODEL that also appears in the fallback list
+// isn't retried twice for nothing.
+const MODELS = [...new Set([PRIMARY_MODEL, ...FALLBACK_MODELS])]
+
+const modelUrl = (model) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+
 const MAX_CONTEXT_CHARS = 8000
 // Bounds how much of the room's own aiChat history gets replayed back to the
 // API as conversation context, so the prompt (and its cost) doesn't grow
@@ -47,17 +63,19 @@ function requireApiKey() {
 // `messages` uses Gemini's own role names ('user' / 'model') rather than
 // Anthropic's ('user' / 'assistant') -- callers are responsible for mapping
 // their own roles before calling this.
-async function callGemini(apiKey, systemPrompt, messages) {
-  const body = JSON.stringify({
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
-  })
+/**
+ * One model, with retries. Resolves to the reply text, or to a transient
+ * failure the caller can respond to by moving on to the next model. A
+ * permanent failure (bad request, bad key, model retired) throws instead,
+ * since no amount of retrying or substituting fixes it.
+ */
+async function tryModel(apiKey, model, body) {
+  let lastMessage = `AI request failed (${model})`
 
-  let lastMessage = 'AI request failed'
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     let response
     try {
-      response = await fetch(GEMINI_API_URL, {
+      response = await fetch(modelUrl(model), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body,
@@ -66,7 +84,7 @@ async function callGemini(apiKey, systemPrompt, messages) {
       // A dropped connection or DNS blip is as transient as a 503, and the
       // caller sees the same "it's broken" either way.
       lastMessage = `Could not reach the AI service (${err.message})`
-      if (attempt === MAX_ATTEMPTS) throw new Error(lastMessage)
+      if (attempt === MAX_ATTEMPTS) return { transient: lastMessage }
       await sleep(backoffMs(attempt))
       continue
     }
@@ -74,18 +92,36 @@ async function callGemini(apiKey, systemPrompt, messages) {
     const data = await response.json().catch(() => ({}))
     if (response.ok) {
       const parts = data.candidates?.[0]?.content?.parts ?? []
-      return parts.map((part) => part.text ?? '').join('')
+      return { text: parts.map((part) => part.text ?? '').join('') }
     }
 
     lastMessage = data.error?.message || `AI request failed (${response.status})`
-    // 400/401/403 mean the request or the key is wrong; retrying just delays
-    // the same answer. Only the overload/outage statuses are worth a retry.
-    if (!TRANSIENT_STATUSES.has(response.status) || attempt === MAX_ATTEMPTS) {
-      throw new Error(lastMessage)
-    }
+    // 400/401/403 mean the request or the key is wrong; retrying or switching
+    // models just delays the same answer.
+    if (!TRANSIENT_STATUSES.has(response.status)) throw new Error(lastMessage)
+    if (attempt === MAX_ATTEMPTS) return { transient: lastMessage }
     await sleep(backoffMs(attempt))
   }
 
+  return { transient: lastMessage }
+}
+
+async function callGemini(apiKey, systemPrompt, messages) {
+  const body = JSON.stringify({
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
+  })
+
+  let lastMessage = 'AI request failed'
+  for (const model of MODELS) {
+    const result = await tryModel(apiKey, model, body)
+    if (result.text !== undefined) return result.text
+    lastMessage = result.transient
+  }
+
+  // Every model was unreachable or overloaded. Surface the last provider
+  // message -- it is the one that explains why ("high demand", a timeout) --
+  // rather than a generic failure the user can do nothing with.
   throw new Error(lastMessage)
 }
 

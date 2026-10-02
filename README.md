@@ -151,7 +151,8 @@ Copy `server/.env.example` to `server/.env`. Every variable is optional and fall
 | `PORT` | `1234` | Server port |
 | `CLIENT_URL` | `http://localhost:5173` | Used to build links inside password-reset emails |
 | `GEMINI_API_KEY` | — | Enables the AI Assistant and Explain |
-| `GEMINI_MODEL` | `gemini-3.8-flash` | Model used for AI features |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Model tried first for AI features |
+| `GEMINI_FALLBACK_MODELS` | `gemini-flash-latest,gemini-3.8-flash` | Tried in order when the primary keeps returning transient errors. Individual Gemini models saturate independently — during one spike `gemini-3.8-flash` failed 4 of 4 requests while `gemini-3.5-flash` served 4 of 4 — so a single pinned model is a single point of failure |
 | `RESEND_API_KEY` | — | Enables password-reset emails ([Resend](https://resend.com/api-keys) sandbox sending needs no DNS setup) |
 | `RESEND_FROM` | `CodeMesh <onboarding@resend.dev>` | From address for those emails |
 | `PISTON_WS_URL` | `ws://localhost:2000/api/v2/connect` | Interactive runs (stdin) |
