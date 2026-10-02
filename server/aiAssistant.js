@@ -9,6 +9,24 @@ const MAX_CONTEXT_CHARS = 8000
 // without limit as a project's assistant thread gets longer.
 const HISTORY_MESSAGES = 20
 
+// Gemini returns 503 "This model is currently experiencing high demand" during
+// load spikes, and the identical request usually succeeds moments later. Giving
+// up on the first failure turned a few seconds of congestion at Google into an
+// assistant that looked broken, so those statuses get a couple of retries.
+// Anything else -- 400, 401, 403 -- is a wrong request or a bad key, where
+// retrying only delays the same answer.
+const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
+const MAX_ATTEMPTS = 3
+
+/** Exponential backoff with jitter, so concurrent retries don't resynchronise. */
+function backoffMs(attempt) {
+  return 400 * 2 ** (attempt - 1) + Math.floor(Math.random() * 250)
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function truncate(text) {
   return text.length > MAX_CONTEXT_CHARS
     ? `${text.slice(0, MAX_CONTEXT_CHARS)}\n… (truncated)`
@@ -30,23 +48,45 @@ function requireApiKey() {
 // Anthropic's ('user' / 'assistant') -- callers are responsible for mapping
 // their own roles before calling this.
 async function callGemini(apiKey, systemPrompt, messages) {
-  const response = await fetch(GEMINI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
-    }),
+  const body = JSON.stringify({
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
   })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(data.error?.message || `AI request failed (${response.status})`)
+
+  let lastMessage = 'AI request failed'
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let response
+    try {
+      response = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body,
+      })
+    } catch (err) {
+      // A dropped connection or DNS blip is as transient as a 503, and the
+      // caller sees the same "it's broken" either way.
+      lastMessage = `Could not reach the AI service (${err.message})`
+      if (attempt === MAX_ATTEMPTS) throw new Error(lastMessage)
+      await sleep(backoffMs(attempt))
+      continue
+    }
+
+    const data = await response.json().catch(() => ({}))
+    if (response.ok) {
+      const parts = data.candidates?.[0]?.content?.parts ?? []
+      return parts.map((part) => part.text ?? '').join('')
+    }
+
+    lastMessage = data.error?.message || `AI request failed (${response.status})`
+    // 400/401/403 mean the request or the key is wrong; retrying just delays
+    // the same answer. Only the overload/outage statuses are worth a retry.
+    if (!TRANSIENT_STATUSES.has(response.status) || attempt === MAX_ATTEMPTS) {
+      throw new Error(lastMessage)
+    }
+    await sleep(backoffMs(attempt))
   }
-  const parts = data.candidates?.[0]?.content?.parts ?? []
-  return parts.map((part) => part.text ?? '').join('')
+
+  throw new Error(lastMessage)
 }
 
 // Lives in the project's own Y.Doc (same pattern as chat/comments/activity),
