@@ -26,6 +26,18 @@ const customTemplates = require('./customTemplates')
 const database = require('./database')
 const deploy = require('./deploy')
 const rateLimit = require('./rateLimit')
+
+// The AI routes bill a shared, metered third-party key, so they need a real
+// member rather than the implicit 'viewer' a public project grants to anyone
+// with the link. Deploy and the Database panel draw the same line differently
+// (private projects only); this is the lighter version -- members of any role.
+function requireProjectMember(project, sessionToken, feature) {
+  const username = sessionToken ? accounts.getSessionUser(sessionToken) : null
+  if (!username || !project.members[username]) {
+    throw new Error(`Sign in as a member of this project to use ${feature}`)
+  }
+  return username
+}
 const ssrfGuard = require('./ssrfGuard')
 const { readRoomFiles } = require('./gitSync')
 const { buildProjectZip } = require('./zipExport')
@@ -642,6 +654,11 @@ const server = http.createServer(async (req, res) => {
     try {
       const { room, question, sessionToken, activeFileId } = await readJsonBody(req)
       const { project, role } = projects.getProjectForRequester(sessionToken, room)
+      // Membership, not just access. A public project hands every anonymous
+      // visitor the 'viewer' role, which would let anyone holding the link
+      // spend the instance's AI allowance -- on the free tier that is 20
+      // requests a day, so one passer-by could exhaust it in a minute.
+      requireProjectMember(project, sessionToken, 'the AI assistant')
       const actor = accounts.getSessionUser(sessionToken) ?? 'Anonymous'
       const reply = await aiAssistant.askAssistant(project.id, question, actor, activeFileId)
       res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -723,7 +740,8 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/ai/explain') {
     try {
       const { room, sessionToken, code, languageId } = await readJsonBody(req)
-      projects.getProjectForRequester(sessionToken, room)
+      const { project } = projects.getProjectForRequester(sessionToken, room)
+      requireProjectMember(project, sessionToken, 'Explain')
       const explanation = await aiAssistant.explainCode(code, languageId)
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ explanation }))

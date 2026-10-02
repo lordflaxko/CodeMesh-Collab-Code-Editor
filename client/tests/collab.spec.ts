@@ -199,6 +199,41 @@ test('a public project can be viewed by an anonymous visitor without logging in'
   await anonCtx.close()
 })
 
+test('the AI assistant is refused to an anonymous visitor on a public project', async ({
+  browser,
+}) => {
+  // A public project grants every anonymous visitor the 'viewer' role, which
+  // is right for reading the code and wrong for the AI: it bills a shared,
+  // metered key, so anyone with the link could otherwise spend the whole
+  // instance's daily allowance.
+  const ownerCtx = await browser.newContext()
+  const ownerPage = await ownerCtx.newPage()
+  await openNewProject(ownerPage, 'aipublic', 'public')
+  const projectUrl = ownerPage.url()
+
+  const anonCtx = await browser.newContext()
+  const anonPage = await anonCtx.newPage()
+  await anonPage.goto(new URL(projectUrl).pathname)
+  await expect(anonPage.getByText('Connected', { exact: true })).toBeVisible()
+
+  // Called directly: the point is the server's answer, not whether the panel
+  // happens to offer the button to a viewer.
+  const status = await anonPage.evaluate(async (room) => {
+    const res = await fetch('http://localhost:1234/ai/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room, question: 'hello', sessionToken: null, activeFileId: null }),
+    })
+    return { code: res.status, body: await res.text() }
+  }, new URL(projectUrl).pathname.replace('/', ''))
+
+  expect(status.code).toBe(400)
+  expect(status.body).toContain('member of this project')
+
+  await ownerCtx.close()
+  await anonCtx.close()
+})
+
 test('the public gallery lists a public project and lets an anonymous visitor open it, but never lists a private one', async ({
   browser,
 }) => {
